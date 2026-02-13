@@ -10,10 +10,11 @@ import os
 
 # Import z-ai-web-dev-sdk
 try:
-    import ZAI from 'z-ai-web-dev-sdk'
+    import z_ai_web_dev_sdk as ZAI_SDK
     ZAI_AVAILABLE = True
 except ImportError:
     ZAI_AVAILABLE = False
+    ZAI_SDK = None
     logging.warning("z-ai-web-dev-sdk not installed. AI features will be disabled.")
 
 from ..models.tenant import Tenant
@@ -52,13 +53,13 @@ When presenting data:
     def __init__(self):
         self.client = None
     
-    async def initialize_client(self, api_key: str):
+    async def initialize_client(self, api_key: str = None):
         """Initialize the AI client"""
         if not ZAI_AVAILABLE:
             raise RuntimeError("z-ai-web-dev-sdk is not installed")
         
         # Initialize ZAI client
-        self.client = await ZAI.create(api_key=api_key)
+        self.client = await ZAI_SDK.create()
     
     async def ask(
         self,
@@ -79,16 +80,14 @@ When presenting data:
         Returns:
             AI-generated response
         """
-        # Get and decrypt API key
-        if not tenant.encrypted_api_key:
-            return "AI is not configured. Please set up your AI API key in Settings."
+        if not ZAI_AVAILABLE:
+            return "AI features are not available. Please install z-ai-web-dev-sdk."
         
         try:
-            api_key = decrypt_data(tenant.encrypted_api_key)
-            await self.initialize_client(api_key)
+            await self.initialize_client()
         except Exception as e:
             logger.error(f"Failed to initialize AI client: {e}")
-            return "Failed to initialize AI. Please check your API key configuration."
+            return "Failed to initialize AI. Please check your configuration."
         
         # Gather business data for context
         business_data = await self._gather_business_data(db, tenant, context)

@@ -200,7 +200,7 @@ class TestSalesInvoiceCRUD:
     
     def test_create_invoice(self, db, tenant, branch):
         """Test creating a sales invoice"""
-        from ..app.models.customer import Customer"""
+        from ..app.models.customer import Customer
     
     def test_create_sales_invoice(self, db, tenant, branch):
         """Test creating a sales invoice"""

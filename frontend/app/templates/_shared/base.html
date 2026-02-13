@@ -1,18 +1,37 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Booklet{% endblock %} - Multi-Tenant ERP</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233B82F6'%3E%3Cpath d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'/%3E%3C/svg%3E">
+    
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: "{{ tenant().primary_color if tenant() else '#3B82F6' }}",
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        accent: {
+                            500: '#10b981',
+                            600: '#059669',
+                        }
                     }
                 }
             }
@@ -31,36 +50,95 @@
     <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     
-    <!-- Heroicons (SVG) -->
-    
     <style>
         [x-cloak] { display: none !important; }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #a1a1a1;
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Smooth transitions for dark mode */
+        html {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Sidebar animation */
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
+        
+        /* Main content animation */
+        .main-transition {
+            transition: margin-left 0.3s ease-in-out, padding 0.3s ease-in-out;
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Focus ring styles */
+        .focus-ring:focus {
+            outline: none;
+            ring: 2px;
+            ring-offset: 2px;
+            ring-color: #3b82f6;
         }
     </style>
     
     {% block head %}{% endblock %}
 </head>
-<body class="h-full" {% block body_attrs %}{% endblock %}>
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" 
+      x-data="{ 
+          darkMode: localStorage.getItem('darkMode') === 'true' || 
+                   (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      }"
+      x-init="$nextTick(() => { if(darkMode) document.documentElement.classList.add('dark') })"
+      x-bind:class="{ 'dark': darkMode }"
+      {% block body_attrs %}{% endblock %}>
     
     {% block content %}{% endblock %}
     
     <!-- Flowbite JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+    
+    <!-- Theme Toggle Function -->
+    <script>
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('darkMode', 'false');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('darkMode', 'true');
+            }
+        }
+    </script>
     
     {% block scripts %}{% endblock %}
     
@@ -74,10 +152,10 @@
                  x-init="setTimeout(() => show = false, 5000)"
                  x-transition
                  class="flex items-center p-4 mb-4 text-sm rounded-lg shadow-lg
-                        {% if category == 'success' %}text-green-800 bg-green-50 dark:bg-gray-800 dark:text-green-400{% endif %}
-                        {% if category == 'error' %}text-red-800 bg-red-50 dark:bg-gray-800 dark:text-red-400{% endif %}
-                        {% if category == 'warning' %}text-yellow-800 bg-yellow-50 dark:bg-gray-800 dark:text-yellow-400{% endif %}
-                        {% if category == 'info' %}text-blue-800 bg-blue-50 dark:bg-gray-800 dark:text-blue-400{% endif %}">
+                        {% if category == 'success' %}text-green-800 bg-green-50 dark:bg-green-900 dark:text-green-200{% endif %}
+                        {% if category == 'error' %}text-red-800 bg-red-50 dark:bg-red-900 dark:text-red-200{% endif %}
+                        {% if category == 'warning' %}text-yellow-800 bg-yellow-50 dark:bg-yellow-900 dark:text-yellow-200{% endif %}
+                        {% if category == 'info' %}text-blue-800 bg-blue-50 dark:bg-blue-900 dark:text-blue-200{% endif %}">
                 <span class="sr-only">{{ category }}</span>
                 <div>{{ message }}</div>
                 <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex items-center justify-center h-8 w-8" @click="show = false">

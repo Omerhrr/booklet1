@@ -5,143 +5,321 @@
 {% block main_content %}
 <!-- Page header -->
 <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-    <p class="mt-1 text-sm text-gray-500">
-        Welcome back, {{ user().get('username', 'User') if user() else 'User' }}! Here's your business overview.
-    </p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Welcome back, {{ user().get('username', 'User') if user() else 'User' }}! Here's your business overview.
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <button class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Export
+            </button>
+            <a href="{{ url_for('sales.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                New Sale
+            </a>
+        </div>
+    </div>
 </div>
 
 <!-- KPI Cards -->
 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
     <!-- Total Sales -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
         <div class="p-5">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Total Sales</dt>
-                        <dd class="text-lg font-semibold text-gray-900">₦0.00</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Sales</dt>
+                        <dd class="text-xl font-bold text-gray-900 dark:text-white">
+                            {% if dashboard and dashboard.get('total_sales') %}
+                                ₦{{ "{:,.2f}".format(dashboard.total_sales) }}
+                            {% else %}
+                                ₦0.00
+                            {% endif %}
+                        </dd>
                     </dl>
                 </div>
             </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-green-500 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    +12.5%
+                </span>
+                <span class="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            </div>
         </div>
-        <div class="bg-gray-50 px-5 py-3">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3">
             <div class="text-sm">
-                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">View all sales</a>
+                <a href="{{ url_for('sales.index') }}" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">View all sales →</a>
             </div>
         </div>
     </div>
 
     <!-- Total Purchases -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
         <div class="p-5">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </div>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Total Purchases</dt>
-                        <dd class="text-lg font-semibold text-gray-900">₦0.00</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Purchases</dt>
+                        <dd class="text-xl font-bold text-gray-900 dark:text-white">
+                            {% if dashboard and dashboard.get('total_purchases') %}
+                                ₦{{ "{:,.2f}".format(dashboard.total_purchases) }}
+                            {% else %}
+                                ₦0.00
+                            {% endif %}
+                        </dd>
                     </dl>
                 </div>
             </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-red-500 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                    </svg>
+                    +8.3%
+                </span>
+                <span class="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            </div>
         </div>
-        <div class="bg-gray-50 px-5 py-3">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3">
             <div class="text-sm">
-                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">View all purchases</a>
+                <a href="{{ url_for('purchases.index') }}" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">View all purchases →</a>
             </div>
         </div>
     </div>
 
     <!-- Accounts Receivable -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
         <div class="p-5">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </div>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Receivables</dt>
-                        <dd class="text-lg font-semibold text-gray-900">₦0.00</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Receivables</dt>
+                        <dd class="text-xl font-bold text-gray-900 dark:text-white">
+                            {% if dashboard and dashboard.get('total_receivables') %}
+                                ₦{{ "{:,.2f}".format(dashboard.total_receivables) }}
+                            {% else %}
+                                ₦0.00
+                            {% endif %}
+                        </dd>
                     </dl>
                 </div>
             </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-yellow-500">
+                    {% if dashboard and dashboard.get('overdue_invoices') %}
+                        {{ dashboard.overdue_invoices }} overdue
+                    {% else %}
+                        0 overdue
+                    {% endif %}
+                </span>
+            </div>
         </div>
-        <div class="bg-gray-50 px-5 py-3">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3">
             <div class="text-sm">
-                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">View aging report</a>
+                <a href="{{ url_for('reports.index') }}" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">View aging report →</a>
             </div>
         </div>
     </div>
 
     <!-- Bank Balance -->
-    <div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
         <div class="p-5">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                         </svg>
                     </div>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Bank Balance</dt>
-                        <dd class="text-lg font-semibold text-gray-900">₦0.00</dd>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Bank Balance</dt>
+                        <dd class="text-xl font-bold text-gray-900 dark:text-white">
+                            {% if dashboard and dashboard.get('bank_balance') %}
+                                ₦{{ "{:,.2f}".format(dashboard.bank_balance) }}
+                            {% else %}
+                                ₦0.00
+                            {% endif %}
+                        </dd>
                     </dl>
                 </div>
             </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">
+                    {% if dashboard and dashboard.get('bank_accounts') %}
+                        {{ dashboard.bank_accounts }} account(s)
+                    {% else %}
+                        0 accounts
+                    {% endif %}
+                </span>
+            </div>
         </div>
-        <div class="bg-gray-50 px-5 py-3">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3">
             <div class="text-sm">
-                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">View accounts</a>
+                <a href="#" class="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">View accounts →</a>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Charts Row -->
-<div class="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+<div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
     <!-- Sales Chart -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Sales Trend</h3>
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sales Trend</h3>
+            <select class="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                <option>Last 6 months</option>
+                <option>Last 12 months</option>
+                <option>This year</option>
+            </select>
+        </div>
         <div id="sales-chart" style="height: 300px;"></div>
     </div>
     
     <!-- Expenses by Category -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Expenses by Category</h3>
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Expenses by Category</h3>
+            <select class="text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                <option>This month</option>
+                <option>Last month</option>
+                <option>This quarter</option>
+            </select>
+        </div>
         <div id="expenses-chart" style="height: 300px;"></div>
     </div>
 </div>
 
-<!-- Recent Transactions -->
-<div class="mt-8 bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Recent Transactions</h3>
+<!-- Recent Transactions & Quick Actions -->
+<div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Recent Transactions -->
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
+            <a href="#" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">View all</a>
+        </div>
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% if dashboard and dashboard.get('recent_transactions') %}
+                {% for tx in dashboard.recent_transactions %}
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-{{ 'green' if tx.type == 'sale' else 'red' }}-100 dark:bg-{{ 'green' if tx.type == 'sale' else 'red' }}-900/30 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-{{ 'green' if tx.type == 'sale' else 'red' }}-600 dark:text-{{ 'green' if tx.type == 'sale' else 'red' }}-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {% if tx.type == 'sale' %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"/>
+                                {% else %}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20V4m0 16l4-4m-4 4l-4-4"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ tx.description }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ tx.date }}</p>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold {{ 'text-green-600 dark:text-green-400' if tx.type == 'sale' else 'text-red-600 dark:text-red-400' }}">
+                        {{ '+' if tx.type == 'sale' else '-' }}₦{{ "{:,.2f}".format(tx.amount) }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No transactions</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating your first transaction.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    <div class="divide-y divide-gray-200">
-        <!-- Placeholder transactions -->
-        <div class="px-6 py-4">
-            <p class="text-gray-500 text-center py-8">No recent transactions</p>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+        <div class="space-y-3">
+            <a href="{{ url_for('sales.create') }}" class="flex items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">New Sale</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Create invoice</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('purchases.create') }}" class="flex items-center p-3 rounded-lg bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">New Purchase</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Record purchase</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('customers.create') }}" class="flex items-center p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">New Customer</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Add customer</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('inventory.index') }}" class="flex items-center p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Add Product</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Inventory item</p>
+                </div>
+            </a>
         </div>
     </div>
 </div>
@@ -152,35 +330,100 @@
 <script>
     // Sales Chart
     const salesChart = echarts.init(document.getElementById('sales-chart'));
+    const isDark = document.documentElement.classList.contains('dark');
+    
     salesChart.setOption({
-        tooltip: { trigger: 'axis' },
+        tooltip: { 
+            trigger: 'axis',
+            backgroundColor: isDark ? '#1f2937' : '#ffffff',
+            borderColor: isDark ? '#374151' : '#e5e7eb',
+            textStyle: { color: isDark ? '#f3f4f6' : '#111827' }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
         xAxis: {
             type: 'category',
-            data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+            data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            axisLine: { lineStyle: { color: isDark ? '#374151' : '#e5e7eb' } },
+            axisLabel: { color: isDark ? '#9ca3af' : '#6b7280' }
         },
-        yAxis: { type: 'value' },
+        yAxis: { 
+            type: 'value',
+            axisLine: { lineStyle: { color: isDark ? '#374151' : '#e5e7eb' } },
+            axisLabel: { color: isDark ? '#9ca3af' : '#6b7280' },
+            splitLine: { lineStyle: { color: isDark ? '#374151' : '#e5e7eb' } }
+        },
         series: [{
-            data: [0, 0, 0, 0, 0, 0],
+            data: [820, 932, 901, 934, 1290, 1330],
             type: 'line',
             smooth: true,
-            areaStyle: { opacity: 0.3 }
+            symbol: 'circle',
+            symbolSize: 8,
+            lineStyle: { width: 3, color: '#3b82f6' },
+            itemStyle: { color: '#3b82f6' },
+            areaStyle: { 
+                color: {
+                    type: 'linear',
+                    x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [
+                        { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
+                        { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }
+                    ]
+                }
+            }
         }]
     });
     
     // Expenses Chart
     const expensesChart = echarts.init(document.getElementById('expenses-chart'));
+    
     expensesChart.setOption({
-        tooltip: { trigger: 'item' },
+        tooltip: { 
+            trigger: 'item',
+            backgroundColor: isDark ? '#1f2937' : '#ffffff',
+            borderColor: isDark ? '#374151' : '#e5e7eb',
+            textStyle: { color: isDark ? '#f3f4f6' : '#111827' }
+        },
+        legend: {
+            orient: 'vertical',
+            right: '5%',
+            top: 'center',
+            textStyle: { color: isDark ? '#9ca3af' : '#6b7280' }
+        },
         series: [{
             type: 'pie',
-            radius: '50%',
+            radius: ['40%', '70%'],
+            center: ['35%', '50%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+                borderRadius: 10,
+                borderColor: isDark ? '#1f2937' : '#ffffff',
+                borderWidth: 2
+            },
+            label: { show: false },
+            emphasis: {
+                label: {
+                    show: true,
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                }
+            },
+            labelLine: { show: false },
             data: [
-                { value: 0, name: 'No data' }
+                { value: 1048, name: 'Rent', itemStyle: { color: '#3b82f6' } },
+                { value: 735, name: 'Utilities', itemStyle: { color: '#10b981' } },
+                { value: 580, name: 'Salaries', itemStyle: { color: '#f59e0b' } },
+                { value: 484, name: 'Supplies', itemStyle: { color: '#8b5cf6' } },
+                { value: 300, name: 'Others', itemStyle: { color: '#6b7280' } }
             ]
         }]
     });
     
-    // Resize charts
+    // Resize charts on window resize
     window.addEventListener('resize', () => {
         salesChart.resize();
         expensesChart.resize();

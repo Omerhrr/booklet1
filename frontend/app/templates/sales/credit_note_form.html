@@ -1,0 +1,165 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Create Credit Note{% endblock %}
+
+{% block main_content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Credit Note</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create a credit note for returns or adjustments</p>
+        </div>
+        <a href="{{ url_for('sales.credit_notes') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+            ← Back to Credit Notes
+        </a>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="space-y-6">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Credit Note Details</h2>
+            
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Customer <span class="text-red-500">*</span>
+                    </label>
+                    <select name="customer_id" id="customer_id" required
+                            class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">Select Customer</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="invoice_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Original Invoice (Optional)
+                    </label>
+                    <select name="invoice_id" id="invoice_id"
+                            class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">Select Invoice</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="credit_note_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="credit_note_date" id="credit_note_date" required
+                           class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Reason
+                    </label>
+                    <select name="reason" id="reason"
+                            class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="return">Product Return</option>
+                        <option value="adjustment">Price Adjustment</option>
+                        <option value="correction">Invoice Correction</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Items</h2>
+            
+            <div id="items-container" class="space-y-4">
+                <!-- Items will be added here dynamically -->
+            </div>
+            
+            <button type="button" onclick="addItem()"
+                    class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Item
+            </button>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('sales.credit_notes') }}" 
+               class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+            </a>
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                Create Credit Note
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+let itemCount = 0;
+
+function addItem() {
+    const container = document.getElementById('items-container');
+    const itemHtml = `
+        <div class="grid grid-cols-12 gap-4 items-end" id="item-${itemCount}">
+            <div class="col-span-5">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                <input type="text" name="description_${itemCount}" required
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</label>
+                <input type="number" name="quantity_${itemCount}" value="1" min="1" required
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div class="col-span-3">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unit Price (₦)</label>
+                <input type="number" name="unit_price_${itemCount}" step="0.01" min="0" required
+                       class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div class="col-span-2">
+                <button type="button" onclick="removeItem(${itemCount})"
+                        class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', itemHtml);
+    itemCount++;
+    updateItemCount();
+}
+
+function removeItem(index) {
+    const item = document.getElementById(`item-${index}`);
+    if (item) {
+        item.remove();
+        updateItemCount();
+    }
+}
+
+function updateItemCount() {
+    const input = document.querySelector('input[name="item_count"]');
+    if (!input) {
+        const form = document.querySelector('form');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'item_count';
+        hiddenInput.value = itemCount;
+        form.appendChild(hiddenInput);
+    } else {
+        input.value = itemCount;
+    }
+}
+
+// Add initial item
+document.addEventListener('DOMContentLoaded', () => {
+    addItem();
+});
+</script>
+{% endblock %}

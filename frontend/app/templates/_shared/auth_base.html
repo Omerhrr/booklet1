@@ -1,61 +1,148 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-100">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Booklet{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233B82F6'%3E%3Cpath d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'/%3E%3C/svg%3E">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Flowbite CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
     
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Smooth transitions for dark mode */
+        html {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Gradient animation */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
     </style>
     
     {% block head %}{% endblock %}
 </head>
-<body class="h-full" {% block body_attrs %}{% endblock %}>
-    <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+      x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+      x-init="$nextTick(() => { if(darkMode) document.documentElement.classList.add('dark') })"
+      x-bind:class="{ 'dark': darkMode }"
+      {% block body_attrs %}{% endblock %}>
+    
+    <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 overflow-hidden -z-10">
+            <div class="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-blue-100 dark:bg-blue-900/20 blur-3xl opacity-50"></div>
+            <div class="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-purple-100 dark:bg-purple-900/20 blur-3xl opacity-50"></div>
+        </div>
+        
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
             <!-- Logo -->
             <div class="flex justify-center">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-10 h-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    <span class="text-2xl font-bold text-gray-900">Booklet</span>
-                </div>
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                        <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold text-gray-900 dark:text-white">Booklet</span>
+                </a>
             </div>
             
-            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {% block page_title %}{% endblock %}
             </h2>
             
             {% if page_subtitle %}
-            <p class="mt-2 text-center text-sm text-gray-600">
+            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                 {{ page_subtitle }}
             </p>
             {% endif %}
         </div>
 
         <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700">
                 {% block content %}{% endblock %}
             </div>
         </div>
         
+        <!-- Theme Toggle -->
+        <button @click="toggleDarkMode()" 
+                class="fixed bottom-4 right-4 p-3 rounded-full bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shadow-lg hover:shadow-xl transition-all border border-gray-200 dark:border-gray-700"
+                title="Toggle dark mode">
+            <svg x-show="darkMode" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg x-show="!darkMode" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+        </button>
+        
         <!-- Footer -->
-        <div class="mt-8 text-center text-sm text-gray-500">
+        <div class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
             <p>&copy; 2026 Booklet by Planex Solutions. All rights reserved.</p>
-            <p class="mt-1">Multi-Tenant SaaS ERP Platform</p>
+            <p class="mt-1">Multi-Tenant SaaS ERP Platform for Nigerian Businesses</p>
         </div>
     </div>
     
     <!-- Flowbite JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+    
+    <!-- Theme Toggle Function -->
+    <script>
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('darkMode', 'false');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('darkMode', 'true');
+            }
+        }
+    </script>
     
     <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -67,10 +154,10 @@
                  x-init="setTimeout(() => show = false, 5000)"
                  x-transition
                  class="flex items-center p-4 mb-4 text-sm rounded-lg shadow-lg
-                        {% if category == 'success' %}text-green-800 bg-green-50{% endif %}
-                        {% if category == 'error' %}text-red-800 bg-red-50{% endif %}
-                        {% if category == 'warning' %}text-yellow-800 bg-yellow-50{% endif %}
-                        {% if category == 'info' %}text-blue-800 bg-blue-50{% endif %}">
+                        {% if category == 'success' %}text-green-800 bg-green-50 dark:bg-green-900 dark:text-green-200{% endif %}
+                        {% if category == 'error' %}text-red-800 bg-red-50 dark:bg-red-900 dark:text-red-200{% endif %}
+                        {% if category == 'warning' %}text-yellow-800 bg-yellow-50 dark:bg-yellow-900 dark:text-yellow-200{% endif %}
+                        {% if category == 'info' %}text-blue-800 bg-blue-50 dark:bg-blue-900 dark:text-blue-200{% endif %}">
                 {{ message }}
                 <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex items-center justify-center h-8 w-8" @click="show = false">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 14 14">
