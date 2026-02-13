@@ -1,0 +1,23 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Purchases{% endblock %}
+
+{% block main_content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Purchases</h1>
+    <p class="mt-1 text-sm text-gray-500">Manage your purchase orders and bills</p>
+</div>
+
+<div class="bg-white shadow rounded-lg p-12 text-center">
+    <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-900 mb-2">Purchase Management</h2>
+    <p class="text-gray-600 mb-6">Create and manage purchase orders, bills, and debit notes.</p>
+    <a href="{{ url_for('dashboard.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+        Back to Dashboard
+    </a>
+</div>
+{% endblock %}

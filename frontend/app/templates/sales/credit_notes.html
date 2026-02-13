@@ -1,0 +1,380 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Credit Notes{% endblock %}
+
+{% block main_content %}
+<!-- Page header -->
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Credit Notes</h1>
+        <p class="mt-1 text-sm text-gray-500">Manage credit notes and refunds</p>
+    </div>
+    <div class="mt-4 sm:mt-0">
+        <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Credit Note
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Total Credit Notes</dt>
+                    <dd class="text-xl font-semibold text-gray-900" x-text="stats.total_count"></dd>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Pending</dt>
+                    <dd class="text-xl font-semibold text-gray-900" x-text="'₦' + formatNumber(stats.pending_amount)"></dd>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <dt class="text-sm font-medium text-gray-500">Applied</dt>
+                    <dd class="text-xl font-semibold text-gray-900" x-text="'₦' + formatNumber(stats.applied_amount)"></dd>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="p-4">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <label for="search" class="sr-only">Search</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input type="text" x-model="searchQuery" @input.debounce.300ms="loadCreditNotes()" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search by number or customer...">
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <select x-model="filters.status" @change="loadCreditNotes()" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                    <option value="">All Status</option>
+                    <option value="open">Open</option>
+                    <option value="partial">Partially Applied</option>
+                    <option value="applied">Fully Applied</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Credit Notes Table -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Credit Note #</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <template x-for="cn in creditNotes" :key="cn.id">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a :href="'/sales/credit-notes/' + cn.id" class="text-sm font-medium text-blue-600 hover:text-blue-900" x-text="cn.credit_note_number"></a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900" x-text="cn.customer_name"></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(cn.date)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span x-text="'Invoice: ' + cn.invoice_number" x-show="cn.invoice_number"></span>
+                            <span x-text="cn.reference" x-show="!cn.invoice_number && cn.reference"></span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900" x-text="'₦' + formatNumber(cn.total)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm" :class="cn.balance > 0 ? 'text-yellow-600 font-medium' : 'text-gray-500'" x-text="'₦' + formatNumber(cn.balance)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                  :class="{
+                                      'bg-yellow-100 text-yellow-800': cn.status === 'open',
+                                      'bg-blue-100 text-blue-800': cn.status === 'partial',
+                                      'bg-green-100 text-green-800': cn.status === 'applied'
+                                  }"
+                                  x-text="cn.status.charAt(0).toUpperCase() + cn.status.slice(1)">
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button @click="applyCreditNote(cn)" x-show="cn.balance > 0" class="text-blue-600 hover:text-blue-900 mr-3">Apply</button>
+                            <a :href="'/sales/credit-notes/' + cn.id" class="text-gray-600 hover:text-gray-900">View</a>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Empty State -->
+    <div x-show="creditNotes.length === 0" class="px-6 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No credit notes</h3>
+        <p class="mt-1 text-sm text-gray-500">Create a credit note to refund or adjust an invoice.</p>
+    </div>
+</div>
+
+<!-- Create Credit Note Modal -->
+<div x-show="showCreateModal" x-cloak class="fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showCreateModal = false"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Create Credit Note</h3>
+                <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="submitCreditNote" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Customer *</label>
+                        <select x-model="form.customer_id" @change="loadCustomerInvoices()" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Select Customer</option>
+                            <template x-for="c in customers" :key="c.id">
+                                <option :value="c.id" x-text="c.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Related Invoice</label>
+                        <select x-model="form.invoice_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">None (Standalone)</option>
+                            <template x-for="inv in customerInvoices" :key="inv.id">
+                                <option :value="inv.id" x-text="inv.invoice_number + ' - ₦' + formatNumber(inv.total)"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date *</label>
+                        <input type="date" x-model="form.date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Reason</label>
+                        <select x-model="form.reason" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="refund">Refund</option>
+                            <option value="discount">Discount</option>
+                            <option value="correction">Correction</option>
+                            <option value="return">Goods Return</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea x-model="form.description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Reason for credit note..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount *</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">₦</span>
+                        </div>
+                        <input type="number" x-model.number="form.amount" required step="0.01" min="0" class="block w-full pl-7 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" @click="showCreateModal = false" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Create Credit Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Credit Note Modal -->
+<div x-show="showApplyModal" x-cloak class="fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showApplyModal = false"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Apply Credit Note</h3>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">Credit Note: <span class="font-medium text-gray-900" x-text="selectedCN?.credit_note_number"></span></p>
+                <p class="text-sm text-gray-500">Available Balance: <span class="font-medium text-gray-900" x-text="'₦' + formatNumber(selectedCN?.balance)"></span></p>
+            </div>
+            
+            <form @submit.prevent="submitApply" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Apply to Invoice</label>
+                    <select x-model="applyForm.invoice_id" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">Select Invoice</option>
+                        <template x-for="inv in openInvoices" :key="inv.id">
+                            <option :value="inv.id" x-text="inv.invoice_number + ' - ₦' + formatNumber(inv.balance)"></option>
+                        </template>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount to Apply</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">₦</span>
+                        </div>
+                        <input type="number" x-model.number="applyForm.amount" required step="0.01" min="0" class="block w-full pl-7 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" @click="showApplyModal = false" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('creditNotesIndex', () => ({
+        creditNotes: {{ credit_notes | tojson | safe if credit_notes else '[]' }},
+        customers: {{ customers | tojson | safe if customers else '[]' }},
+        stats: {{ stats | tojson | safe if stats else '{ total_count: 0, pending_amount: 0, applied_amount: 0 }' }},
+        searchQuery: '',
+        filters: { status: '' },
+        showCreateModal: false,
+        showApplyModal: false,
+        selectedCN: null,
+        customerInvoices: [],
+        openInvoices: [],
+        form: {
+            customer_id: '',
+            invoice_id: '',
+            date: new Date().toISOString().split('T')[0],
+            reason: 'refund',
+            description: '',
+            amount: 0
+        },
+        applyForm: {
+            invoice_id: '',
+            amount: 0
+        },
+        
+        formatNumber(num) {
+            return new Intl.NumberFormat('en-NG', { minimumFractionDigits: 2 }).format(num || 0);
+        },
+        
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' });
+        },
+        
+        async loadCreditNotes() {
+            const params = new URLSearchParams({ search: this.searchQuery, ...this.filters });
+            const response = await fetch(`/api/sales/credit-notes?${params}`);
+            const data = await response.json();
+            this.creditNotes = data.credit_notes;
+        },
+        
+        async loadCustomerInvoices() {
+            if (!this.form.customer_id) {
+                this.customerInvoices = [];
+                return;
+            }
+            const response = await fetch(`/api/sales/invoices?customer_id=${this.form.customer_id}`);
+            const data = await response.json();
+            this.customerInvoices = data.invoices;
+        },
+        
+        async submitCreditNote() {
+            const response = await fetch('/api/sales/credit-notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.form)
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.showCreateModal = false;
+                this.loadCreditNotes();
+            }
+        },
+        
+        async applyCreditNote(cn) {
+            this.selectedCN = cn;
+            this.applyForm.amount = cn.balance;
+            
+            // Load open invoices for this customer
+            const response = await fetch(`/api/sales/invoices?customer_id=${cn.customer_id}&status=open`);
+            const data = await response.json();
+            this.openInvoices = data.invoices;
+            
+            this.showApplyModal = true;
+        },
+        
+        async submitApply() {
+            const response = await fetch(`/api/sales/credit-notes/${this.selectedCN.id}/apply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(this.applyForm)
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.showApplyModal = false;
+                this.loadCreditNotes();
+            }
+        }
+    }));
+});
+</script>
+{% endblock %}

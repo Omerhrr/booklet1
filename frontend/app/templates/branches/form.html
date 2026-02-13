@@ -1,0 +1,18 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Branch Form{% endblock %}
+
+{% block main_content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">{% if branch %}Edit Branch{% else %}New Branch{% endif %}</h1>
+    <p class="mt-1 text-sm text-gray-500">{% if branch %}Update branch details{% else %}Create a new business branch{% endif %}</p>
+</div>
+
+<div class="bg-white shadow rounded-lg p-12 text-center">
+    <h2 class="text-xl font-semibold text-gray-900 mb-2">Branch Form</h2>
+    <p class="text-gray-600 mb-6">Branch form coming soon.</p>
+    <a href="{{ url_for('branches.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+        Back to Branches
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Account Ledger{% endblock %}
+
+{% block main_content %}
+<!-- Page header -->
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">General Ledger</h1>
+        <p class="mt-1 text-sm text-gray-500">View all transactions for an account</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-3">
+        <button @click="exportLedger('pdf')" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Export PDF
+        </button>
+        <button @click="exportLedger('excel')" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Export Excel
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="p-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+                <label for="account_id" class="block text-sm font-medium text-gray-700">Account</label>
+                <select x-model="filters.account_id" 
+                        id="account_id"
+                        hx-get="/api/accounting/ledger"
+                        hx-trigger="change"
+                        hx-target="#ledger-entries"
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">Select Account</option>
+                    <optgroup label="Assets">
+                        {% for acc in accounts if acc.type == 'asset' %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Liabilities">
+                        {% for acc in accounts if acc.type == 'liability' %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Equity">
+                        {% for acc in accounts if acc.type == 'equity' %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Revenue">
+                        {% for acc in accounts if acc.type == 'revenue' %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Expenses">
+                        {% for acc in accounts if acc.type == 'expense' %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>{{ acc.code }} - {{ acc.name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+            
+            <div>
+                <label for="date_from" class="block text-sm font-medium text-gray-700">From Date</label>
+                <input type="date" 
+                       x-model="filters.date_from"
+                       id="date_from"
+                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            
+            <div>
+                <label for="date_to" class="block text-sm font-medium text-gray-700">To Date</label>
+                <input type="date" 
+                       x-model="filters.date_to"
+                       id="date_to"
+                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            
+            <div class="flex items-end">
+                <button @click="applyFilters" class="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Summary -->
+<div x-show="selectedAccount" class="bg-white shadow rounded-lg mb-6">
+    <div class="p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900" x-text="selectedAccount?.name"></h3>
+                <p class="text-sm text-gray-500" x-text="selectedAccount?.code + ' - ' + selectedAccount?.type"></p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Current Balance</p>
+                <p class="text-2xl font-bold text-gray-900" x-text="formatCurrency(currentBalance)"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ledger Table -->
+<div class="bg-white shadow rounded-lg overflow-hidden" id="ledger-entries">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Reference
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Debit
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Credit
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Balance
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Opening Balance -->
+                <tr class="bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">Opening Balance</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">-</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">-</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" x-text="formatCurrency(openingBalance)"></td>
+                </tr>
+                
+                <template x-for="entry in entries" :key="entry.id">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(entry.date)"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a :href="entry.link" class="text-sm text-blue-600 hover:text-blue-900" x-text="entry.reference"></a>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900" x-text="entry.description"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right" :class="entry.debit > 0 ? 'text-gray-900' : 'text-gray-400'" x-text="entry.debit > 0 ? formatCurrency(entry.debit) : '-'"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right" :class="entry.credit > 0 ? 'text-gray-900' : 'text-gray-400'" x-text="entry.credit > 0 ? formatCurrency(entry.credit) : '-'"></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" x-text="formatCurrency(entry.running_balance)"></td>
+                    </tr>
+                </template>
+                
+                <!-- Totals -->
+                <tr class="bg-gray-100 font-medium">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" colspan="3">Total</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900" x-text="formatCurrency(totalDebit)"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900" x-text="formatCurrency(totalCredit)"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900" x-text="formatCurrency(closingBalance)"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Empty State -->
+    <div x-show="entries.length === 0" class="px-6 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No entries found</h3>
+        <p class="mt-1 text-sm text-gray-500">Select an account to view its ledger entries.</p>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div x-show="totalPages > 1" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+    <div class="flex-1 flex justify-between sm:hidden">
+        <button @click="prevPage" :disabled="currentPage === 1" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+            Previous
+        </button>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+            Next
+        </button>
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm text-gray-700">
+                Showing <span class="font-medium" x-text="((currentPage - 1) * pageSize) + 1"></span>
+                to <span class="font-medium" x-text="Math.min(currentPage * pageSize, totalEntries)"></span>
+                of <span class="font-medium" x-text="totalEntries"></span> entries
+            </p>
+        </div>
+        <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button @click="prevPage" :disabled="currentPage === 1" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <template x-for="page in pages" :key="page">
+                    <button @click="goToPage(page)" 
+                            :class="currentPage === page ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
+                            class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                            x-text="page">
+                    </button>
+                </template>
+                <button @click="nextPage" :disabled="currentPage === totalPages" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('ledgerView', () => ({
+        accounts: {{ accounts | tojson | safe if accounts else '[]' }},
+        selectedAccount: {{ selected_account | tojson | safe if selected_account else 'null' }},
+        entries: {{ entries | tojson | safe if entries else '[]' }},
+        openingBalance: {{ opening_balance | default(0) }},
+        currentBalance: {{ current_balance | default(0) }},
+        filters: {
+            account_id: '{{ selected_account.id if selected_account else "" }}',
+            date_from: '{{ date_from | default("") }}',
+            date_to: '{{ date_to | default("") }}'
+        },
+        currentPage: 1,
+        totalPages: {{ total_pages | default(1) }},
+        totalEntries: {{ total_entries | default(0) }},
+        pageSize: 50,
+        
+        get totalDebit() {
+            return this.entries.reduce((sum, e) => sum + (e.debit || 0), 0);
+        },
+        
+        get totalCredit() {
+            return this.entries.reduce((sum, e) => sum + (e.credit || 0), 0);
+        },
+        
+        get closingBalance() {
+            return this.openingBalance + this.totalDebit - this.totalCredit;
+        },
+        
+        get pages() {
+            const pages = [];
+            const start = Math.max(1, this.currentPage - 2);
+            const end = Math.min(this.totalPages, this.currentPage + 2);
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            return pages;
+        },
+        
+        formatCurrency(amount) {
+            return '₦' + new Intl.NumberFormat('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0);
+        },
+        
+        formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' });
+        },
+        
+        async applyFilters() {
+            const params = new URLSearchParams(this.filters);
+            const response = await fetch(`/api/accounting/ledger?${params}`);
+            const data = await response.json();
+            
+            this.entries = data.entries;
+            this.openingBalance = data.opening_balance;
+            this.currentBalance = data.current_balance;
+            this.selectedAccount = data.account;
+        },
+        
+        async exportLedger(format) {
+            const params = new URLSearchParams({
+                ...this.filters,
+                format: format
+            });
+            window.location.href = `/api/accounting/ledger/export?${params}`;
+        },
+        
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.loadPage();
+            }
+        },
+        
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.loadPage();
+            }
+        },
+        
+        goToPage(page) {
+            this.currentPage = page;
+            this.loadPage();
+        },
+        
+        async loadPage() {
+            const params = new URLSearchParams({
+                ...this.filters,
+                page: this.currentPage
+            });
+            const response = await fetch(`/api/accounting/ledger?${params}`);
+            const data = await response.json();
+            
+            this.entries = data.entries;
+            this.currentPage = data.page;
+            this.totalPages = data.total_pages;
+            this.totalEntries = data.total_entries;
+        }
+    }));
+});
+</script>
+{% endblock %}

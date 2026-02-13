@@ -1,0 +1,393 @@
+{% extends "_shared/dashboard_base.html" %}
+
+{% block title %}Journal Voucher{% endblock %}
+
+{% block main_content %}
+<!-- Page header -->
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+            <span x-text="isEditing ? 'Edit Journal Voucher' : 'New Journal Voucher'"></span>
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">Record manual journal entries</p>
+    </div>
+    <div class="mt-4 sm:mt-0" x-show="isEditing">
+        <span class="text-sm text-gray-500">JV No: </span>
+        <span class="font-mono text-gray-900" x-text="voucher.voucher_number"></span>
+    </div>
+</div>
+
+<!-- Voucher Form -->
+<form @submit.prevent="submitVoucher" class="space-y-6">
+    <!-- Header Info -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Voucher Details</h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700">Date *</label>
+                    <input type="date" 
+                           x-model="voucher.date" 
+                           id="date" 
+                           required
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="reference" class="block text-sm font-medium text-gray-700">Reference</label>
+                    <input type="text" 
+                           x-model="voucher.reference" 
+                           id="reference" 
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="External reference number">
+                </div>
+                
+                <div>
+                    <label for="branch_id" class="block text-sm font-medium text-gray-700">Branch</label>
+                    <select x-model="voucher.branch_id" id="branch_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">All Branches</option>
+                        <template x-for="branch in branches" :key="branch.id">
+                            <option :value="branch.id" x-text="branch.name"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="narration" class="block text-sm font-medium text-gray-700">Narration *</label>
+                <textarea x-model="voucher.narration" 
+                          id="narration" 
+                          required
+                          rows="3"
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          placeholder="Describe the purpose of this journal entry..."></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Journal Lines -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Journal Lines</h3>
+            <button type="button" @click="addLine" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Line
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+                            Account *
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Debit (₦)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Credit (₦)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                            
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="(line, index) in voucher.lines" :key="index">
+                        <tr>
+                            <td class="px-6 py-3">
+                                <select x-model="line.account_id" 
+                                        required
+                                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select Account</option>
+                                    <optgroup label="Assets">
+                                        <template x-for="acc in getAccountsByType('asset')" :key="acc.id">
+                                            <option :value="acc.id" x-text="acc.code + ' - ' + acc.name"></option>
+                                        </template>
+                                    </optgroup>
+                                    <optgroup label="Liabilities">
+                                        <template x-for="acc in getAccountsByType('liability')" :key="acc.id">
+                                            <option :value="acc.id" x-text="acc.code + ' - ' + acc.name"></option>
+                                        </template>
+                                    </optgroup>
+                                    <optgroup label="Equity">
+                                        <template x-for="acc in getAccountsByType('equity')" :key="acc.id">
+                                            <option :value="acc.id" x-text="acc.code + ' - ' + acc.name"></option>
+                                        </template>
+                                    </optgroup>
+                                    <optgroup label="Revenue">
+                                        <template x-for="acc in getAccountsByType('revenue')" :key="acc.id">
+                                            <option :value="acc.id" x-text="acc.code + ' - ' + acc.name"></option>
+                                        </template>
+                                    </optgroup>
+                                    <optgroup label="Expenses">
+                                        <template x-for="acc in getAccountsByType('expense')" :key="acc.id">
+                                            <option :value="acc.id" x-text="acc.code + ' - ' + acc.name"></option>
+                                        </template>
+                                    </optgroup>
+                                </select>
+                            </td>
+                            <td class="px-6 py-3">
+                                <input type="text" 
+                                       x-model="line.description"
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="Line description">
+                            </td>
+                            <td class="px-6 py-3">
+                                <input type="number" 
+                                       x-model.number="line.debit"
+                                       @input="onDebitInput(index)"
+                                       step="0.01"
+                                       min="0"
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-right focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="0.00">
+                            </td>
+                            <td class="px-6 py-3">
+                                <input type="number" 
+                                       x-model.number="line.credit"
+                                       @input="onCreditInput(index)"
+                                       step="0.01"
+                                       min="0"
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-right focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="0.00">
+                            </td>
+                            <td class="px-6 py-3 text-center">
+                                <button type="button" 
+                                        @click="removeLine(index)"
+                                        x-show="voucher.lines.length > 2"
+                                        class="text-red-500 hover:text-red-700">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+                <tfoot class="bg-gray-50">
+                    <tr>
+                        <td colspan="2" class="px-6 py-3 text-right font-medium text-gray-900">
+                            Totals
+                        </td>
+                        <td class="px-6 py-3 text-right">
+                            <span class="font-medium" :class="isBalanced ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(totalDebit)"></span>
+                        </td>
+                        <td class="px-6 py-3 text-right">
+                            <span class="font-medium" :class="isBalanced ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(totalCredit)"></span>
+                        </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="px-6 py-3">
+                            <div class="flex items-center justify-between">
+                                <div x-show="!isBalanced" class="text-sm text-red-600">
+                                    <svg class="inline w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    Entry is not balanced. Difference: <span x-text="formatAmount(Math.abs(totalDebit - totalCredit))"></span>
+                                </div>
+                                <div x-show="isBalanced && totalDebit > 0" class="text-sm text-green-600">
+                                    <svg class="inline w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Entry is balanced
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Attachments -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Attachments</h3>
+        </div>
+        <div class="p-6">
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center"
+                 @drop.prevent="handleDrop"
+                 @dragover.prevent="isDragging = true"
+                 @dragleave.prevent="isDragging = false"
+                 :class="{ 'border-blue-500 bg-blue-50': isDragging }">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <div class="mt-2">
+                    <label for="file-upload" class="cursor-pointer">
+                        <span class="text-blue-600 hover:text-blue-500">Upload files</span>
+                        <span class="text-gray-500"> or drag and drop</span>
+                    </label>
+                    <input id="file-upload" 
+                           type="file" 
+                           class="sr-only" 
+                           multiple
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                           @change="handleFileSelect">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG, DOC up to 10MB each</p>
+            </div>
+            
+            <div x-show="attachments.length > 0" class="mt-4 space-y-2">
+                <div x-for="(file, index) in attachments" :key="index" class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="text-sm text-gray-700" x-text="file.name"></span>
+                    </div>
+                    <button type="button" @click="removeAttachment(index)" class="text-red-500 hover:text-red-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-3">
+        <a href="{{ url_for('accounting.index') }}" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Cancel
+        </a>
+        <button type="button" 
+                @click="saveDraft"
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Save Draft
+        </button>
+        <button type="submit" 
+                :disabled="!isBalanced || totalDebit === 0"
+                class="inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            Post Voucher
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('journalVoucher', () => ({
+        isEditing: {{ 'true' if voucher else 'false' }},
+        isDragging: false,
+        accounts: {{ accounts | tojson | safe if accounts else '[]' }},
+        branches: {{ branches | tojson | safe if branches else '[]' }},
+        voucher: {{ voucher | tojson | safe if voucher else '{
+            date: new Date().toISOString().split("T")[0],
+            reference: "",
+            branch_id: "",
+            narration: "",
+            lines: [
+                { account_id: "", description: "", debit: 0, credit: 0 },
+                { account_id: "", description: "", credit: 0, debit: 0 }
+            ]
+        }' }},
+        attachments: [],
+        
+        get totalDebit() {
+            return this.voucher.lines.reduce((sum, line) => sum + (line.debit || 0), 0);
+        },
+        
+        get totalCredit() {
+            return this.voucher.lines.reduce((sum, line) => sum + (line.credit || 0), 0);
+        },
+        
+        get isBalanced() {
+            return Math.abs(this.totalDebit - this.totalCredit) < 0.01;
+        },
+        
+        getAccountsByType(type) {
+            return this.accounts.filter(acc => acc.type === type);
+        },
+        
+        addLine() {
+            this.voucher.lines.push({
+                account_id: "",
+                description: "",
+                debit: 0,
+                credit: 0
+            });
+        },
+        
+        removeLine(index) {
+            this.voucher.lines.splice(index, 1);
+        },
+        
+        onDebitInput(index) {
+            if (this.voucher.lines[index].debit > 0) {
+                this.voucher.lines[index].credit = 0;
+            }
+        },
+        
+        onCreditInput(index) {
+            if (this.voucher.lines[index].credit > 0) {
+                this.voucher.lines[index].debit = 0;
+            }
+        },
+        
+        formatAmount(amount) {
+            return '₦' + new Intl.NumberFormat('en-NG', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0);
+        },
+        
+        handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            this.attachments.push(...files);
+        },
+        
+        handleDrop(event) {
+            this.isDragging = false;
+            const files = Array.from(event.dataTransfer.files);
+            this.attachments.push(...files);
+        },
+        
+        removeAttachment(index) {
+            this.attachments.splice(index, 1);
+        },
+        
+        saveDraft() {
+            this.submitVoucher(true);
+        },
+        
+        async submitVoucher(isDraft = false) {
+            const formData = new FormData();
+            formData.append('voucher', JSON.stringify({
+                ...this.voucher,
+                status: isDraft ? 'draft' : 'posted'
+            }));
+            
+            this.attachments.forEach((file, i) => {
+                formData.append(`attachment_${i}`, file);
+            });
+            
+            try {
+                const response = await fetch('/api/accounting/journal-vouchers', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = '/accounting';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    }));
+});
+</script>
+{% endblock %}
