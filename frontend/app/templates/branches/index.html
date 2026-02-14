@@ -1,23 +1,26 @@
 {% extends "_shared/dashboard_base.html" %}
-
 {% block title %}Branches{% endblock %}
-
 {% block main_content %}
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Branches</h1>
-    <p class="mt-1 text-sm text-gray-500">Manage your business branches and locations</p>
-</div>
-
-<div class="bg-white shadow rounded-lg p-12 text-center">
-    <div class="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-        <svg class="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-        </svg>
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Branches</h1>
+        <a href="{{ url_for('branches.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add Branch</a>
     </div>
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Branch Management</h2>
-    <p class="text-gray-600 mb-6">Create and manage multiple business branches and locations.</p>
-    <a href="{{ url_for('dashboard.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-        Back to Dashboard
-    </a>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for branch in branches %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ branch.name }}</h3>
+                <span class="px-2 py-1 rounded-full text-xs {{ 'bg-green-100 text-green-800' if branch.is_active else 'bg-red-100 text-red-800' }}">{{ 'Active' if branch.is_active else 'Inactive' }}</span>
+            </div>
+            <p class="text-sm text-gray-500">{{ branch.address }}, {{ branch.city }}</p>
+            <div class="mt-4 flex space-x-2">
+                <a href="{{ url_for('branches.edit', branch_id=branch.id) }}" class="text-sm text-blue-600 hover:text-blue-800">Edit</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full text-center py-12 text-gray-500">No branches found</div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

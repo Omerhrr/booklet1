@@ -1,18 +1,24 @@
 {% extends "_shared/dashboard_base.html" %}
-
 {% block title %}Create Purchase{% endblock %}
-
 {% block main_content %}
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Create Purchase</h1>
-    <p class="mt-1 text-sm text-gray-500">Create a new purchase order or bill</p>
-</div>
-
-<div class="bg-white shadow rounded-lg p-12 text-center">
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Purchase Form</h2>
-    <p class="text-gray-600 mb-6">Purchase creation form coming soon.</p>
-    <a href="{{ url_for('purchases.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-        Back to Purchases
-    </a>
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Purchase Bill</h1>
+    <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vendor *</label>
+                <select name="vendor_id" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">Select Vendor</option>
+                    {% for v in vendors %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}
+                </select></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill Date *</label><input type="date" name="bill_date" value="{{ today }}" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label><input type="date" name="due_date" value="{{ due_date }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label><textarea name="notes" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></textarea></div>
+        <input type="hidden" name="item_count" value="0">
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('purchases.index') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Cancel</a>
+            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create</button>
+        </div>
+    </form>
 </div>
 {% endblock %}

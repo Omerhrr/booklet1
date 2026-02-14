@@ -1,18 +1,24 @@
 {% extends "_shared/dashboard_base.html" %}
-
-{% block title %}Team Form{% endblock %}
-
+{% block title %}{% if member %}Edit Member{% else %}Add Team Member{% endif %}{% endblock %}
 {% block main_content %}
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">{% if member %}Edit Team Member{% else %}Add Team Member{% endif %}</h1>
-    <p class="mt-1 text-sm text-gray-500">{% if member %}Update team member details{% else %}Invite a new team member{% endif %}</p>
-</div>
-
-<div class="bg-white shadow rounded-lg p-12 text-center">
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Team Member Form</h2>
-    <p class="text-gray-600 mb-6">Team member form coming soon.</p>
-    <a href="{{ url_for('team.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-        Back to Team
-    </a>
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% if member %}Edit Team Member{% else %}Add Team Member{% endif %}</h1>
+    <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label><input type="text" name="username" value="{{ member.username if member else '' }}" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label><input type="email" name="email" value="{{ member.email if member else '' }}" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label><input type="text" name="first_name" value="{{ member.first_name if member else '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label><input type="text" name="last_name" value="{{ member.last_name if member else '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            {% if not member %}<div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label><input type="password" name="password" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>{% endif %}
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                <select name="role_id" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    {% for r in roles %}<option value="{{ r.id }}" {% if member and member.role_id == r.id %}selected{% endif %}>{{ r.name }}</option>{% endfor %}
+                </select></div>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('team.index') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Cancel</a>
+            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save</button>
+        </div>
+    </form>
 </div>
 {% endblock %}

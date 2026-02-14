@@ -15,6 +15,17 @@ def get_headers():
     return {'Authorization': f'Bearer {token}'} if token else {}
 
 
+def get_items(data):
+    """Extract items from API response - handles both list and dict responses"""
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get('items', [])
+    return []
+
+
 @inventory_bp.route('/')
 def index():
     """Products list"""
@@ -33,11 +44,11 @@ def index():
             params=params,
             headers=get_headers()
         )
-        products = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        products = {'items': []}
+        data = []
 
-    return render_template('inventory/index.html', products=products.get('items', []), search=search)
+    return render_template('inventory/index.html', products=get_items(data), search=search)
 
 
 @inventory_bp.route('/create', methods=['GET', 'POST'])
@@ -76,11 +87,11 @@ def create():
     # Get categories
     try:
         categories_resp = requests.get(f'{API_BASE}/inventory/categories', headers=get_headers())
-        categories = categories_resp.json() if categories_resp.status_code == 200 else {'items': []}
+        categories_data = categories_resp.json() if categories_resp.status_code == 200 else []
     except:
-        categories = {'items': []}
+        categories_data = []
 
-    return render_template('inventory/product_form.html', product=None, categories=categories)
+    return render_template('inventory/product_form.html', product=None, categories=get_items(categories_data))
 
 
 @inventory_bp.route('/<int:product_id>/edit', methods=['GET', 'POST'])
@@ -121,11 +132,11 @@ def edit(product_id):
 
     try:
         categories_resp = requests.get(f'{API_BASE}/inventory/categories', headers=get_headers())
-        categories = categories_resp.json() if categories_resp.status_code == 200 else {'items': []}
+        categories_data = categories_resp.json() if categories_resp.status_code == 200 else []
     except:
-        categories = {'items': []}
+        categories_data = []
 
-    return render_template('inventory/product_form.html', product=product, categories=categories)
+    return render_template('inventory/product_form.html', product=product, categories=get_items(categories_data))
 
 
 @inventory_bp.route('/<int:product_id>/delete', methods=['POST'])
@@ -151,11 +162,11 @@ def categories():
     """Categories list"""
     try:
         response = requests.get(f'{API_BASE}/inventory/categories', headers=get_headers())
-        categories = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        categories = {'items': []}
+        data = []
 
-    return render_template('inventory/categories.html', categories=categories)
+    return render_template('inventory/categories.html', categories=get_items(data))
 
 
 @inventory_bp.route('/categories/create', methods=['POST'])
@@ -187,11 +198,11 @@ def adjustments():
     """Stock adjustments"""
     try:
         response = requests.get(f'{API_BASE}/inventory/stock-adjustments', headers=get_headers())
-        adjustments = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        adjustments = {'items': []}
+        data = []
 
-    return render_template('inventory/adjustments.html', adjustments=adjustments)
+    return render_template('inventory/adjustments.html', adjustments=get_items(data))
 
 
 @inventory_bp.route('/adjustments/create', methods=['GET', 'POST'])
@@ -222,8 +233,8 @@ def create_adjustment():
     # Get products for dropdown
     try:
         products_resp = requests.get(f'{API_BASE}/inventory/products', headers=get_headers())
-        products = products_resp.json() if products_resp.status_code == 200 else {'items': []}
+        products_data = products_resp.json() if products_resp.status_code == 200 else []
     except:
-        products = {'items': []}
+        products_data = []
 
-    return render_template('inventory/adjustment_form.html', products=products)
+    return render_template('inventory/adjustment_form.html', products=get_items(products_data))

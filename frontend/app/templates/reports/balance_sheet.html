@@ -1,0 +1,25 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}balance | titlesheet Report{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">balance | titlesheet Report</h1>
+        <div class="flex space-x-2">
+            <button class="px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50">
+                <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export
+            </button>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div id="report-content">
+            {% if report %}
+                <pre class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ report | tojson(indent=2) }}</pre>
+            {% else %}
+                <p class="text-center text-gray-500 dark:text-gray-400 py-12">No data available for this report. Please ensure you have transactions recorded.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

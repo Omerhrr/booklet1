@@ -1,0 +1,61 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}Company Settings{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Company Settings</h1>
+    
+    <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Business Name</label>
+                <input type="text" name="business_name" value="{{ settings.business_name or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trading Name</label>
+                <input type="text" name="trading_name" value="{{ settings.trading_name or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Industry</label>
+                <select name="industry" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">Select Industry</option>
+                    {% for ind in industries %}
+                    <option value="{{ ind }}" {% if settings.industry == ind %}selected{% endif %}>{{ ind }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                <input type="email" name="email" value="{{ settings.email or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                <input type="text" name="phone" value="{{ settings.phone or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tax ID</label>
+                <input type="text" name="tax_id" value="{{ settings.tax_id or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                <textarea name="address" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">{{ settings.address or '' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
+                <input type="text" name="city" value="{{ settings.city or '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">State</label>
+                <select name="state" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">Select State</option>
+                    {% for st in states %}
+                    <option value="{{ st }}" {% if settings.state == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-end">
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

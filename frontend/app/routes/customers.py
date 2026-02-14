@@ -14,6 +14,17 @@ def get_headers():
     return {'Authorization': f'Bearer {token}'} if token else {}
 
 
+def get_items(data):
+    """Extract items from API response - handles both list and dict responses"""
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get('items', [])
+    return []
+
+
 @customers_bp.route('/')
 def index():
     """Customers list"""
@@ -29,11 +40,11 @@ def index():
             params=params,
             headers=get_headers()
         )
-        customers = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        customers = {'items': []}
+        data = []
 
-    return render_template('customers/index.html', customers=customers.get('items', []), search=search)
+    return render_template('customers/index.html', customers=get_items(data), search=search)
 
 
 @customers_bp.route('/create', methods=['GET', 'POST'])

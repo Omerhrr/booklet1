@@ -1,0 +1,39 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}Stock Adjustments{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
+        <a href="{{ url_for('inventory.create_adjustment') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">New Adjustment</a>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Product</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Change</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Reason</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for adj in adjustments %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ adj.adjustment_date }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ adj.product.name if adj.product else '-' }}</td>
+                    <td class="px-6 py-4 text-sm {% if adj.quantity_change > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if adj.quantity_change > 0 %}+{% endif %}{{ adj.quantity_change }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ adj.reason }}</td>
+                    <td class="px-6 py-4 text-sm"><span class="px-2 py-1 rounded-full text-xs {{ 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' if adj.adjustment_type == 'manual' else 'bg-gray-100 text-gray-800' }}">{{ adj.adjustment_type }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">No adjustments found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

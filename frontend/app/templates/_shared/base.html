@@ -126,17 +126,32 @@
     
     <!-- Theme Toggle Function -->
     <script>
+        // Initialize theme immediately to prevent flash
+        (function() {
+            const isDark = localStorage.getItem('darkMode') === 'true' || 
+                          (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.body?.classList.add('dark');
+            }
+        })();
+        
         function toggleDarkMode() {
             const html = document.documentElement;
             const isDark = html.classList.contains('dark');
             
             if (isDark) {
                 html.classList.remove('dark');
+                document.body.classList.remove('dark');
                 localStorage.setItem('darkMode', 'false');
             } else {
                 html.classList.add('dark');
+                document.body.classList.add('dark');
                 localStorage.setItem('darkMode', 'true');
             }
+            
+            // Trigger resize for charts
+            window.dispatchEvent(new Event('resize'));
         }
     </script>
     

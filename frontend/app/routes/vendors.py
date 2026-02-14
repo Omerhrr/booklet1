@@ -14,26 +14,29 @@ def get_headers():
     return {'Authorization': f'Bearer {token}'} if token else {}
 
 
+def get_items(data):
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get('items', [])
+    return []
+
+
 @vendors_bp.route('/')
 def index():
     """Vendors list"""
     search = request.args.get('search', '')
-
     params = {}
     if search:
         params['search'] = search
-
     try:
-        response = requests.get(
-            f'{API_BASE}/vendors',
-            params=params,
-            headers=get_headers()
-        )
-        vendors = response.json() if response.status_code == 200 else {'items': []}
+        response = requests.get(f'{API_BASE}/vendors', params=params, headers=get_headers())
+        data = response.json() if response.status_code == 200 else []
     except:
-        vendors = {'items': []}
-
-    return render_template('vendors/index.html', vendors=vendors.get('items', []), search=search)
+        data = []
+    return render_template('vendors/index.html', vendors=get_items(data), search=search)
 
 
 @vendors_bp.route('/create', methods=['GET', 'POST'])
@@ -53,13 +56,8 @@ def create():
             'bank_name': request.form.get('bank_name'),
             'bank_account': request.form.get('bank_account')
         }
-
         try:
-            response = requests.post(
-                f'{API_BASE}/vendors',
-                json=data,
-                headers=get_headers()
-            )
+            response = requests.post(f'{API_BASE}/vendors', json=data, headers=get_headers())
             if response.status_code == 200:
                 flash('Vendor created successfully', 'success')
                 return redirect(url_for('vendors.index'))
@@ -67,7 +65,6 @@ def create():
                 flash(response.json().get('detail', 'Error'), 'error')
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
-
     return render_template('vendors/form.html', vendor=None)
 
 
@@ -88,25 +85,18 @@ def edit(vendor_id):
             'bank_account': request.form.get('bank_account'),
             'is_active': request.form.get('is_active') == 'on'
         }
-
         try:
-            response = requests.put(
-                f'{API_BASE}/vendors/{vendor_id}',
-                json=data,
-                headers=get_headers()
-            )
+            response = requests.put(f'{API_BASE}/vendors/{vendor_id}', json=data, headers=get_headers())
             if response.status_code == 200:
                 flash('Vendor updated successfully', 'success')
                 return redirect(url_for('vendors.index'))
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
-
     try:
         response = requests.get(f'{API_BASE}/vendors/{vendor_id}', headers=get_headers())
         vendor = response.json() if response.status_code == 200 else None
     except:
         vendor = None
-
     return render_template('vendors/form.html', vendor=vendor)
 
 
@@ -114,15 +104,11 @@ def edit(vendor_id):
 def delete(vendor_id):
     """Delete vendor"""
     try:
-        response = requests.delete(
-            f'{API_BASE}/vendors/{vendor_id}',
-            headers=get_headers()
-        )
+        response = requests.delete(f'{API_BASE}/vendors/{vendor_id}', headers=get_headers())
         if response.status_code == 200:
             flash('Vendor deleted successfully', 'success')
         else:
             flash(response.json().get('detail', 'Error'), 'error')
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-
     return redirect(url_for('vendors.index'))

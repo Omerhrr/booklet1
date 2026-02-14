@@ -15,16 +15,27 @@ def get_headers():
     return {'Authorization': f'Bearer {token}'} if token else {}
 
 
+def get_items(data):
+    """Extract items from API response - handles both list and dict responses"""
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get('items', [])
+    return []
+
+
 @sales_bp.route('/')
 def index():
     """Sales invoices list"""
     try:
         response = requests.get(f'{API_BASE}/sales/invoices', headers=get_headers())
-        invoices = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        invoices = {'items': []}
+        data = []
 
-    return render_template('sales/index.html', invoices=invoices.get('items', []))
+    return render_template('sales/index.html', invoices=get_items(data))
 
 
 @sales_bp.route('/create', methods=['GET', 'POST'])
@@ -72,20 +83,20 @@ def create():
     # Get customers and products for dropdowns
     try:
         customers_resp = requests.get(f'{API_BASE}/customers', headers=get_headers())
-        customers = customers_resp.json() if customers_resp.status_code == 200 else {'items': []}
+        customers_data = customers_resp.json() if customers_resp.status_code == 200 else []
     except:
-        customers = {'items': []}
+        customers_data = []
 
     try:
         products_resp = requests.get(f'{API_BASE}/inventory/products', headers=get_headers())
-        products = products_resp.json() if products_resp.status_code == 200 else {'items': []}
+        products_data = products_resp.json() if products_resp.status_code == 200 else []
     except:
-        products = {'items': []}
+        products_data = []
 
     today = datetime.now().strftime('%Y-%m-%d')
     due = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
 
-    return render_template('sales/create.html', customers=customers.get('items', []), products=products.get('items', []),  today=today, due_date=due)
+    return render_template('sales/create.html', customers=get_items(customers_data), products=get_items(products_data), today=today, due_date=due)
 
 
 @sales_bp.route('/<int:invoice_id>')
@@ -145,11 +156,11 @@ def credit_notes():
     """Credit notes list"""
     try:
         response = requests.get(f'{API_BASE}/sales/credit-notes', headers=get_headers())
-        credit_notes = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        credit_notes = {'items': []}
+        data = []
 
-    return render_template('sales/credit_notes.html', credit_notes=credit_notes)
+    return render_template('sales/credit_notes.html', credit_notes=get_items(data))
 
 
 @sales_bp.route('/credit-notes/create', methods=['GET', 'POST'])
@@ -191,8 +202,8 @@ def create_credit_note():
     # Get customers for dropdown
     try:
         customers_resp = requests.get(f'{API_BASE}/customers', headers=get_headers())
-        customers = customers_resp.json() if customers_resp.status_code == 200 else {'items': []}
+        customers_data = customers_resp.json() if customers_resp.status_code == 200 else []
     except:
-        customers = {'items': []}
+        customers_data = []
 
-    return render_template('sales/credit_note_form.html', customers=customers)
+    return render_template('sales/credit_note_form.html', customers=get_items(customers_data))

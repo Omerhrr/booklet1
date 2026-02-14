@@ -3,13 +3,37 @@ Flask Frontend Application
 Server-side rendering with Jinja2 templates
 """
 
-from flask import Flask, session, redirect, url_for, request, g
+from flask import Flask, session, redirect, url_for, request, g, render_template
 from functools import wraps
 import requests
 import os
 
 # Configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
+
+
+def get_items(response_data):
+    """
+    Helper function to extract items from API response.
+    Handles both list responses and dict responses with 'items' key.
+    """
+    if response_data is None:
+        return []
+    if isinstance(response_data, list):
+        return response_data
+    if isinstance(response_data, dict):
+        return response_data.get('items', [])
+    return []
+
+
+def safe_api_response(response_data, default=None):
+    """
+    Safely handle API response that might be a list or dict.
+    Returns the data as-is if it's valid, or default otherwise.
+    """
+    if response_data is None:
+        return default if default is not None else []
+    return response_data
 
 
 def create_app(config_name='development'):
@@ -52,6 +76,7 @@ def create_app(config_name='development'):
             'format_currency': format_currency,
             'format_date': format_date,
             'format_datetime': format_datetime,
+            'get_items': get_items,
         }
     
     # Before request - check authentication
@@ -239,7 +264,3 @@ def format_datetime(datetime_str):
         return dt.strftime('%d/%m/%Y %H:%M')
     except:
         return str(datetime_str)
-
-
-# Import render_template for error handlers
-from flask import render_template

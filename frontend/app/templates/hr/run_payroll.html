@@ -1,0 +1,23 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}Run Payroll{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Run Payroll</h1>
+    <div class="max-w-md bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <form method="POST">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Month</label>
+                    <select name="month" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                        {% for m in range(1, 13) %}<option value="{{ m }}" {% if m == current_month %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                    </select></div>
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Year</label>
+                    <input type="number" name="year" value="{{ current_year }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{{ url_for('hr.payroll') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Cancel</a>
+                <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Run Payroll</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -15,16 +15,27 @@ def get_headers():
     return {'Authorization': f'Bearer {token}'} if token else {}
 
 
+def get_items(data):
+    """Extract items from API response - handles both list and dict responses"""
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return data.get('items', [])
+    return []
+
+
 @accounting_bp.route('/')
 def index():
     """Chart of Accounts page"""
     try:
         response = requests.get(f'{API_BASE}/accounting/accounts', headers=get_headers())
-        accounts = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        accounts = {'items': []}
+        data = []
 
-    return render_template('accounting/chart_of_accounts.html', accounts=accounts)
+    return render_template('accounting/chart_of_accounts.html', accounts=get_items(data))
 
 
 @accounting_bp.route('/accounts/create', methods=['GET', 'POST'])
@@ -93,11 +104,11 @@ def journal_vouchers():
     """Journal Vouchers list"""
     try:
         response = requests.get(f'{API_BASE}/accounting/journal-vouchers', headers=get_headers())
-        vouchers = response.json() if response.status_code == 200 else {'items': []}
+        data = response.json() if response.status_code == 200 else []
     except:
-        vouchers = {'items': []}
+        data = []
 
-    return render_template('accounting/journal_vouchers.html', vouchers=vouchers)
+    return render_template('accounting/journal_voucher.html', vouchers=get_items(data))
 
 
 @accounting_bp.route('/journal-vouchers/create', methods=['GET', 'POST'])
@@ -142,11 +153,11 @@ def create_journal_voucher():
     # Get accounts for dropdown
     try:
         response = requests.get(f'{API_BASE}/accounting/accounts', headers=get_headers())
-        accounts = response.json() if response.status_code == 200 else {'items': []}
+        accounts_data = response.json() if response.status_code == 200 else []
     except:
-        accounts = {'items': []}
+        accounts_data = []
 
-    return render_template('accounting/journal_voucher_form.html', accounts=accounts)
+    return render_template('accounting/journal_voucher_form.html', accounts=get_items(accounts_data))
 
 
 @accounting_bp.route('/ledger')
@@ -170,18 +181,18 @@ def ledger():
             params=params,
             headers=get_headers()
         )
-        entries = response.json() if response.status_code == 200 else {'items': []}
+        entries_data = response.json() if response.status_code == 200 else []
     except:
-        entries = {'items': []}
+        entries_data = []
 
     # Get accounts for filter
     try:
         response = requests.get(f'{API_BASE}/accounting/accounts', headers=get_headers())
-        accounts = response.json() if response.status_code == 200 else {'items': []}
+        accounts_data = response.json() if response.status_code == 200 else []
     except:
-        accounts = {'items': []}
+        accounts_data = []
 
-    return render_template('accounting/ledger.html', entries=entries, accounts=accounts)
+    return render_template('accounting/ledger.html', entries=get_items(entries_data), accounts=get_items(accounts_data))
 
 
 @accounting_bp.route('/trial-balance')

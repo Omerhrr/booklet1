@@ -1,18 +1,20 @@
 {% extends "_shared/dashboard_base.html" %}
-
-{% block title %}Branch Form{% endblock %}
-
+{% block title %}{% if branch %}Edit Branch{% else %}Add Branch{% endif %}{% endblock %}
 {% block main_content %}
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">{% if branch %}Edit Branch{% else %}New Branch{% endif %}</h1>
-    <p class="mt-1 text-sm text-gray-500">{% if branch %}Update branch details{% else %}Create a new business branch{% endif %}</p>
-</div>
-
-<div class="bg-white shadow rounded-lg p-12 text-center">
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Branch Form</h2>
-    <p class="text-gray-600 mb-6">Branch form coming soon.</p>
-    <a href="{{ url_for('branches.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-        Back to Branches
-    </a>
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% if branch %}Edit Branch{% else %}Add Branch{% endif %}</h1>
+    <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Branch Name</label><input type="text" name="name" value="{{ branch.name if branch else '' }}" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Branch Code</label><input type="text" name="code" value="{{ branch.code if branch else '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">City</label><input type="text" name="city" value="{{ branch.city if branch else '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label><input type="text" name="phone" value="{{ branch.phone if branch else '' }}" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label><textarea name="address" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">{{ branch.address if branch else '' }}</textarea></div>
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('branches.index') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Cancel</a>
+            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save</button>
+        </div>
+    </form>
 </div>
 {% endblock %}
