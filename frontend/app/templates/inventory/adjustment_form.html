@@ -1,0 +1,48 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}Stock Adjustment{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Stock Adjustment</h1>
+        <a href="{{ url_for('inventory.adjustments') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">← Back</a>
+    </div>
+    
+    <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Product *</label>
+                <select name="product_id" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="">Select Product</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}">{{ p.name }} ({{ p.sku }}) - Current Stock: {{ p.stock_quantity }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity Change *</label>
+                <input type="number" name="quantity_change" required step="1" placeholder="Use negative for stock out" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                <p class="mt-1 text-xs text-gray-500">Use positive numbers to add stock, negative to remove</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Adjustment Type</label>
+                <select name="adjustment_type" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+                    <option value="manual">Manual Adjustment</option>
+                    <option value="damage">Damage/Loss</option>
+                    <option value="theft">Theft</option>
+                    <option value="return">Customer Return</option>
+                    <option value="count">Stock Count Variance</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Reason</label>
+                <input type="text" name="reason" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('inventory.adjustments') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">Cancel</a>
+            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Adjustment</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

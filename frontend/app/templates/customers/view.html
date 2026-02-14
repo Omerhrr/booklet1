@@ -1,0 +1,35 @@
+{% extends "_shared/dashboard_base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block main_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ customer.name }}</h1>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('customers.edit', customer_id=customer.id) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit</a>
+            <a href="{{ url_for('customers.index') }}" class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Back</a>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Customer Details</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Email</p><p class="text-gray-900 dark:text-white">{{ customer.email or '-' }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Phone</p><p class="text-gray-900 dark:text-white">{{ customer.phone or '-' }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Address</p><p class="text-gray-900 dark:text-white">{{ customer.address or '-' }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">City</p><p class="text-gray-900 dark:text-white">{{ customer.city or '-' }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Tax ID</p><p class="text-gray-900 dark:text-white">{{ customer.tax_id or '-' }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Payment Terms</p><p class="text-gray-900 dark:text-white">{{ customer.payment_terms or 'Net 30' }}</p></div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Financial Summary</h2>
+            <div class="space-y-4">
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Sales</p><p class="text-xl font-bold text-gray-900 dark:text-white">₦{{ customer.total_sales or 0 }}</p></div>
+                <div><p class="text-sm text-gray-500 dark:text-gray-400">Outstanding Balance</p><p class="text-xl font-bold text-yellow-600">₦{{ customer.balance or 0 }}</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
