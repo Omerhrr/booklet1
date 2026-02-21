@@ -42,21 +42,29 @@ def reset_database():
     # Seed default data
     db = SessionLocal()
     try:
-        # Seed permissions
+        # Seed permissions - check if each exists before adding
         print("Seeding permissions...")
+        perms_added = 0
         for perm in DEFAULT_PERMISSIONS:
-            p = Permission(**perm)
-            db.add(p)
+            existing = db.query(Permission).filter(Permission.name == perm["name"]).first()
+            if not existing:
+                p = Permission(**perm)
+                db.add(p)
+                perms_added += 1
         db.commit()
-        print(f"✅ Seeded {len(DEFAULT_PERMISSIONS)} permissions")
+        print(f"✅ Seeded {perms_added} new permissions ({len(DEFAULT_PERMISSIONS) - perms_added} already existed)")
         
-        # Seed subscription plans
+        # Seed subscription plans - check if each exists before adding
         print("Seeding subscription plans...")
+        plans_added = 0
         for plan in DEFAULT_PLANS:
-            sp = SubscriptionPlan(**plan)
-            db.add(sp)
+            existing = db.query(SubscriptionPlan).filter(SubscriptionPlan.name == plan["name"]).first()
+            if not existing:
+                sp = SubscriptionPlan(**plan)
+                db.add(sp)
+                plans_added += 1
         db.commit()
-        print(f"✅ Seeded {len(DEFAULT_PLANS)} subscription plans")
+        print(f"✅ Seeded {plans_added} new plans ({len(DEFAULT_PLANS) - plans_added} already existed)")
         
     except Exception as e:
         print(f"❌ Error seeding data: {e}")

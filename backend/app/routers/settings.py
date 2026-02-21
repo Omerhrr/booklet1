@@ -27,7 +27,7 @@ class CompanySettingsUpdate(BaseModel):
     website: Optional[str] = None
     tax_id: Optional[str] = None  # Nigerian TIN
     rc_number: Optional[str] = None  # Nigerian CAC number
-    currency: Optional[str] = None
+    base_currency: Optional[str] = None
     fiscal_year_start: Optional[int] = None
     logo_url: Optional[str] = None
 
@@ -67,7 +67,7 @@ async def get_company_settings(
         "website": tenant.website,
         "tax_id": tenant.tax_id,
         "rc_number": tenant.rc_number,
-        "currency": tenant.currency,
+        "base_currency": tenant.base_currency,
         "fiscal_year_start": tenant.fiscal_year_start,
         "logo_url": tenant.logo_url,
         "timezone": tenant.timezone,
