@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from ..database import get_db
 from ..security import get_current_user
 from ..models.branch import Branch
+from ..models.user import User
 
 router = APIRouter(prefix="/branches", tags=["Branches"])
 
@@ -22,7 +23,7 @@ class BranchCreate(BaseModel):
     country: str = "Nigeria"
     phone: Optional[str] = None
     email: Optional[str] = None
-    is_head_office: bool = False
+    is_default: bool = False
 
 class BranchUpdate(BaseModel):
     name: Optional[str] = None
@@ -39,10 +40,10 @@ class BranchUpdate(BaseModel):
 async def list_branches(
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List branches"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Branch).filter(Branch.tenant_id == tenant_id)
 
@@ -59,7 +60,7 @@ async def list_branches(
             "city": b.city,
             "state": b.state,
             "phone": b.phone,
-            "is_head_office": b.is_head_office,
+            "is_default": b.is_default,
             "is_active": b.is_active
         } for b in branches]
     }
@@ -69,10 +70,10 @@ async def list_branches(
 async def create_branch(
     branch_data: BranchCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create branch"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate name
     existing = db.query(Branch).filter(
@@ -83,12 +84,12 @@ async def create_branch(
     if existing:
         raise HTTPException(status_code=400, detail="Branch name already exists")
 
-    # If setting as head office, remove flag from other branches
-    if branch_data.is_head_office:
+    # If setting as default, remove flag from other branches
+    if branch_data.is_default:
         db.query(Branch).filter(
             Branch.tenant_id == tenant_id,
-            Branch.is_head_office == True
-        ).update({"is_head_office": False})
+            Branch.is_default == True
+        ).update({"is_default": False})
 
     branch = Branch(
         tenant_id=tenant_id,
@@ -100,7 +101,7 @@ async def create_branch(
         country=branch_data.country,
         phone=branch_data.phone,
         email=branch_data.email,
-        is_head_office=branch_data.is_head_office
+        is_default=branch_data.is_default
     )
 
     db.add(branch)
@@ -114,10 +115,10 @@ async def create_branch(
 async def get_branch(
     branch_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get branch details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     branch = db.query(Branch).filter(
         Branch.id == branch_id,
@@ -127,12 +128,11 @@ async def get_branch(
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
 
-    # Get stats
-    from ..models.user import User
-    from ..models.sales import SalesInvoice
+    # Get stats - count users assigned to this branch via UserBranchRole
+    from ..models.branch import UserBranchRole
     from ..models.product import Product
 
-    user_count = db.query(User).filter(User.branch_id == branch_id).count()
+    user_count = db.query(UserBranchRole).filter(UserBranchRole.branch_id == branch_id).count()
     product_count = db.query(Product).filter(Product.branch_id == branch_id).count()
 
     return {
@@ -145,7 +145,7 @@ async def get_branch(
         "country": branch.country,
         "phone": branch.phone,
         "email": branch.email,
-        "is_head_office": branch.is_head_office,
+        "is_default": branch.is_default,
         "is_active": branch.is_active,
         "stats": {
             "users": user_count,
@@ -159,10 +159,10 @@ async def update_branch(
     branch_id: int,
     branch_data: BranchUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update branch"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     branch = db.query(Branch).filter(
         Branch.id == branch_id,
@@ -183,10 +183,10 @@ async def update_branch(
 async def delete_branch(
     branch_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Deactivate branch"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     branch = db.query(Branch).filter(
         Branch.id == branch_id,
@@ -196,12 +196,12 @@ async def delete_branch(
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
 
-    if branch.is_head_office:
-        raise HTTPException(status_code=400, detail="Cannot deactivate head office")
+    if branch.is_default:
+        raise HTTPException(status_code=400, detail="Cannot deactivate default branch")
 
-    # Check for users in branch
-    from ..models.user import User
-    users = db.query(User).filter(User.branch_id == branch_id).count()
+    # Check for users assigned to this branch
+    from ..models.branch import UserBranchRole
+    users = db.query(UserBranchRole).filter(UserBranchRole.branch_id == branch_id).count()
     if users > 0:
         branch.is_active = False
         db.commit()
@@ -212,14 +212,14 @@ async def delete_branch(
     return {"message": "Branch deleted successfully"}
 
 
-@router.post("/{branch_id}/set-head-office")
-async def set_head_office(
+@router.post("/{branch_id}/set-default")
+async def set_default_branch(
     branch_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    """Set branch as head office"""
-    tenant_id = current_user["tenant_id"]
+    """Set branch as default"""
+    tenant_id = current_user.tenant_id
 
     branch = db.query(Branch).filter(
         Branch.id == branch_id,
@@ -229,12 +229,12 @@ async def set_head_office(
     if not branch:
         raise HTTPException(status_code=404, detail="Branch not found")
 
-    # Remove head office from all branches
+    # Remove default flag from all branches
     db.query(Branch).filter(
         Branch.tenant_id == tenant_id
-    ).update({"is_head_office": False})
+    ).update({"is_default": False})
 
-    branch.is_head_office = True
+    branch.is_default = True
     db.commit()
 
-    return {"message": f"{branch.name} set as head office"}
+    return {"message": f"{branch.name} set as default branch"}

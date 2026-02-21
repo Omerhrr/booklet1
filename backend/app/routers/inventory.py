@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.product import Product, Category, StockAdjustment
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
@@ -68,10 +69,10 @@ class StockAdjustmentCreate(BaseModel):
 @router.get("/categories")
 async def list_categories(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List all categories"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     categories = db.query(Category).filter(
         Category.tenant_id == tenant_id,
@@ -93,10 +94,10 @@ async def list_categories(
 async def create_category(
     category_data: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create new category"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate name
     existing = db.query(Category).filter(
@@ -126,10 +127,10 @@ async def update_category(
     category_id: int,
     category_data: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update category"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     category = db.query(Category).filter(
         Category.id == category_id,
@@ -150,10 +151,10 @@ async def update_category(
 async def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete category"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     category = db.query(Category).filter(
         Category.id == category_id,
@@ -186,10 +187,10 @@ async def list_products(
     low_stock: Optional[bool] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List products"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Product).filter(Product.tenant_id == tenant_id)
 
@@ -233,10 +234,10 @@ async def list_products(
 async def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create new product"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate SKU
     if product_data.sku:
@@ -279,7 +280,7 @@ async def create_product(
             previous_quantity=0,
             new_quantity=product_data.opening_stock,
             reason="Opening stock",
-            user_id=current_user["user_id"]
+            user_id=current_user.id
         )
         db.add(adjustment)
         db.commit()
@@ -291,10 +292,10 @@ async def create_product(
 async def get_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get product details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     product = db.query(Product).filter(
         Product.id == product_id,
@@ -350,10 +351,10 @@ async def update_product(
     product_id: int,
     product_data: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update product"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     product = db.query(Product).filter(
         Product.id == product_id,
@@ -374,10 +375,10 @@ async def update_product(
 async def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete product (soft delete)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     product = db.query(Product).filter(
         Product.id == product_id,
@@ -399,10 +400,10 @@ async def delete_product(
 async def create_stock_adjustment(
     adjustment_data: StockAdjustmentCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create stock adjustment"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     product = db.query(Product).filter(
         Product.id == adjustment_data.product_id,
@@ -432,7 +433,7 @@ async def create_stock_adjustment(
         previous_quantity=previous_quantity,
         new_quantity=new_quantity,
         reason=adjustment_data.reason,
-        user_id=current_user["user_id"]
+        user_id=current_user.id
     )
 
     db.add(adjustment)
@@ -452,10 +453,10 @@ async def list_stock_adjustments(
     limit: int = Query(50, le=200),
     product_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List stock adjustments"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(StockAdjustment).filter(
         StockAdjustment.tenant_id == tenant_id
@@ -490,10 +491,10 @@ async def list_stock_adjustments(
 @router.get("/dashboard")
 async def get_inventory_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get inventory dashboard statistics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Total products
     total_products = db.query(Product).filter(

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.expense import Expense, OtherIncome
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
@@ -71,10 +72,10 @@ async def list_expenses(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List expenses"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Expense).filter(Expense.tenant_id == tenant_id)
 
@@ -106,10 +107,10 @@ async def list_expenses(
 async def create_expense(
     expense_data: ExpenseCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create expense"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     expense = Expense(
         tenant_id=tenant_id,
@@ -121,7 +122,7 @@ async def create_expense(
         payment_method=expense_data.payment_method,
         account_id=expense_data.account_id,
         reference=expense_data.reference,
-        user_id=current_user["user_id"]
+        user_id=current_user.id
     )
 
     db.add(expense)
@@ -136,10 +137,10 @@ async def get_expense_summary(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get expense summary by category"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     expenses = db.query(Expense).filter(
         Expense.tenant_id == tenant_id,
@@ -169,10 +170,10 @@ async def get_expense_summary(
 async def delete_expense(
     expense_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete expense"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     expense = db.query(Expense).filter(
         Expense.id == expense_id,
@@ -194,10 +195,10 @@ async def list_other_income(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, le=200),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List other income"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     income = db.query(OtherIncome).filter(
         OtherIncome.tenant_id == tenant_id
@@ -221,10 +222,10 @@ async def list_other_income(
 async def create_other_income(
     income_data: OtherIncomeCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create other income"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     income = OtherIncome(
         tenant_id=tenant_id,

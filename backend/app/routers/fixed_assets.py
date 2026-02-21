@@ -10,6 +10,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.fixed_assets import FixedAsset, DepreciationEntry
 
 router = APIRouter(prefix="/fixed-assets", tags=["Fixed Assets"])
@@ -62,10 +63,10 @@ async def list_assets(
     category: Optional[str] = None,
     status: Optional[AssetStatus] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List fixed assets"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(FixedAsset).filter(FixedAsset.tenant_id == tenant_id)
 
@@ -97,10 +98,10 @@ async def list_assets(
 async def create_asset(
     asset_data: FixedAssetCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create fixed asset"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Generate asset code if not provided
     if not asset_data.asset_code:
@@ -137,10 +138,10 @@ async def create_asset(
 async def get_asset(
     asset_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get asset details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     asset = db.query(FixedAsset).filter(
         FixedAsset.id == asset_id,
@@ -182,10 +183,10 @@ async def calculate_depreciation(
     asset_id: int,
     depreciation_date: date,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Calculate and record depreciation for an asset"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     asset = db.query(FixedAsset).filter(
         FixedAsset.id == asset_id,
@@ -247,10 +248,10 @@ async def dispose_asset(
     disposal_date: date,
     disposal_value: float,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Dispose of an asset"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     asset = db.query(FixedAsset).filter(
         FixedAsset.id == asset_id,
@@ -283,10 +284,10 @@ async def dispose_asset(
 @router.get("/dashboard/summary")
 async def get_assets_summary(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get fixed assets summary"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     assets = db.query(FixedAsset).filter(
         FixedAsset.tenant_id == tenant_id,

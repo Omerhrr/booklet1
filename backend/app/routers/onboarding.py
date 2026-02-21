@@ -47,10 +47,10 @@ class OnboardingStep3(BaseModel):
 @router.get("/status")
 async def get_onboarding_status(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Check onboarding progress"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
@@ -76,10 +76,10 @@ async def get_onboarding_status(
 async def complete_step_1(
     data: OnboardingStep1,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Complete company information step"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
@@ -106,10 +106,10 @@ async def complete_step_1(
 async def complete_step_2(
     data: OnboardingStep2,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Complete branch setup step"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check if branch already exists
     existing = db.query(Branch).filter(Branch.tenant_id == tenant_id).count()
@@ -133,10 +133,10 @@ async def complete_step_2(
 async def complete_step_3(
     data: OnboardingStep3,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Complete first employee setup"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get default branch
     branch = db.query(Branch).filter(Branch.tenant_id == tenant_id).first()
@@ -168,10 +168,10 @@ async def complete_step_3(
 @router.post("/complete")
 async def complete_onboarding(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Mark onboarding as complete and set up default data"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 

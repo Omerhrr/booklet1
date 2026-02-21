@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.vendor import Vendor
 from ..models.purchase import PurchaseBill
 
@@ -50,10 +51,10 @@ async def list_vendors(
     is_active: Optional[bool] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List vendors"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Vendor).filter(Vendor.tenant_id == tenant_id)
 
@@ -84,10 +85,10 @@ async def list_vendors(
 async def create_vendor(
     vendor_data: VendorCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create vendor"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate name
     existing = db.query(Vendor).filter(
@@ -125,10 +126,10 @@ async def create_vendor(
 async def get_vendor(
     vendor_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get vendor details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     vendor = db.query(Vendor).filter(
         Vendor.id == vendor_id,
@@ -176,10 +177,10 @@ async def update_vendor(
     vendor_id: int,
     vendor_data: VendorUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update vendor"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     vendor = db.query(Vendor).filter(
         Vendor.id == vendor_id,
@@ -200,10 +201,10 @@ async def update_vendor(
 async def delete_vendor(
     vendor_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete vendor (soft delete)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     vendor = db.query(Vendor).filter(
         Vendor.id == vendor_id,

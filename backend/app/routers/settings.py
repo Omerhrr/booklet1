@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.tenant import Tenant
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
@@ -42,10 +43,10 @@ class InvoiceSettingsUpdate(BaseModel):
 @router.get("/company")
 async def get_company_settings(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get company settings"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
@@ -79,10 +80,10 @@ async def get_company_settings(
 async def update_company_settings(
     settings_data: CompanySettingsUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update company settings"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
@@ -99,10 +100,10 @@ async def update_company_settings(
 @router.get("/invoice")
 async def get_invoice_settings(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get invoice settings"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
@@ -124,10 +125,10 @@ async def get_invoice_settings(
 async def update_invoice_settings(
     settings_data: InvoiceSettingsUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update invoice settings"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 

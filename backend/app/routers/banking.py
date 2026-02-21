@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.banking import BankAccount, FundTransfer, BankReconciliation
 
 router = APIRouter(prefix="/banking", tags=["Banking"])
@@ -44,10 +45,10 @@ class FundTransferCreate(BaseModel):
 @router.get("/accounts")
 async def list_bank_accounts(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List bank accounts"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     accounts = db.query(BankAccount).filter(
         BankAccount.tenant_id == tenant_id,
@@ -73,10 +74,10 @@ async def list_bank_accounts(
 async def create_bank_account(
     account_data: BankAccountCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create bank account"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     account = BankAccount(
         tenant_id=tenant_id,
@@ -101,10 +102,10 @@ async def create_bank_account(
 async def get_bank_account(
     account_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get bank account details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     account = db.query(BankAccount).filter(
         BankAccount.id == account_id,
@@ -148,10 +149,10 @@ async def list_transfers(
     limit: int = Query(50, le=200),
     account_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List fund transfers"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(FundTransfer).filter(FundTransfer.tenant_id == tenant_id)
 
@@ -189,10 +190,10 @@ async def list_transfers(
 async def create_transfer(
     transfer_data: FundTransferCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create fund transfer"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Verify accounts exist
     from_account = db.query(BankAccount).filter(
@@ -243,10 +244,10 @@ async def create_transfer(
 @router.get("/dashboard")
 async def get_banking_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get banking dashboard statistics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     accounts = db.query(BankAccount).filter(
         BankAccount.tenant_id == tenant_id,

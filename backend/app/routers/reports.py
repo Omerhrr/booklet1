@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.account import Account, AccountType, LedgerEntry
 from ..models.sales import SalesInvoice, SalesInvoiceItem, InvoicePaymentStatus
 from ..models.purchase import PurchaseBill, PurchaseBillItem
@@ -25,7 +26,7 @@ async def get_profit_loss(
     end_date: datetime = Query(...),
     compare_previous: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Generate Profit & Loss Statement
@@ -37,7 +38,7 @@ async def get_profit_loss(
     - Operating Expenses
     - Net Profit
     """
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get revenue accounts
     revenue_accounts = db.query(Account).filter(
@@ -159,7 +160,7 @@ async def get_profit_loss(
 async def get_balance_sheet(
     as_of_date: datetime = Query(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Generate Balance Sheet
@@ -169,7 +170,7 @@ async def get_balance_sheet(
     - Liabilities (Current & Non-current)
     - Equity
     """
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get all accounts
     accounts = db.query(Account).filter(
@@ -247,10 +248,10 @@ async def get_balance_sheet(
 async def get_trial_balance_report(
     as_of_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Generate Trial Balance"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     if not as_of_date:
         as_of_date = datetime.now()
@@ -313,14 +314,14 @@ async def get_trial_balance_report(
 async def get_receivables_aging(
     as_of_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Accounts Receivable Aging Report
     
     Buckets: Current, 1-30, 31-60, 61-90, 90+ days
     """
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     if not as_of_date:
         as_of_date = datetime.now()
@@ -399,14 +400,14 @@ async def get_receivables_aging(
 async def get_payables_aging(
     as_of_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Accounts Payable Aging Report
     
     Buckets: Current, 1-30, 31-60, 61-90, 90+ days
     """
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     if not as_of_date:
         as_of_date = datetime.now()
@@ -487,10 +488,10 @@ async def get_sales_summary(
     end_date: datetime = Query(...),
     group_by: str = Query("day", pattern="^(day|week|month|customer|product)$"),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Sales summary report with grouping options"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     invoices = db.query(SalesInvoice).filter(
         SalesInvoice.tenant_id == tenant_id,
@@ -574,10 +575,10 @@ async def get_cash_flow(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Cash flow statement (simplified)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get cash/bank accounts
     from ..models.account import Account

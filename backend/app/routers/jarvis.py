@@ -10,6 +10,7 @@ import json
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 
 router = APIRouter(prefix="/jarvis", tags=["AI Analyst"])
 
@@ -29,7 +30,7 @@ class ChatMessage(BaseModel):
 async def process_query(
     request: QueryRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Process natural language query and return business insights
@@ -41,7 +42,7 @@ async def process_query(
     - "Show me expenses by category"
     - "Which products are low in stock?"
     """
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
     query = request.query.lower()
 
     # Intent detection and response generation

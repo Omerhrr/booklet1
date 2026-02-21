@@ -10,6 +10,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.account import Account, AccountType, LedgerEntry, JournalVoucher
 
 router = APIRouter(prefix="/accounting", tags=["Accounting"])
@@ -52,10 +53,10 @@ async def list_accounts(
     account_type: Optional[AccountType] = None,
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List all accounts for tenant"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Account).filter(Account.tenant_id == tenant_id)
 
@@ -86,10 +87,10 @@ async def list_accounts(
 async def create_account(
     account_data: AccountCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new account"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate code
     existing = db.query(Account).filter(
@@ -122,10 +123,10 @@ async def create_account(
 async def get_account(
     account_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get account details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     account = db.query(Account).filter(
         Account.id == account_id,
@@ -162,10 +163,10 @@ async def update_account(
     account_id: int,
     account_data: AccountUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update account"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     account = db.query(Account).filter(
         Account.id == account_id,
@@ -190,10 +191,10 @@ async def update_account(
 async def delete_account(
     account_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete account (soft delete)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     account = db.query(Account).filter(
         Account.id == account_id,
@@ -227,10 +228,10 @@ async def list_journal_vouchers(
     limit: int = Query(50, le=200),
     is_posted: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List journal vouchers"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(JournalVoucher).filter(
         JournalVoucher.tenant_id == tenant_id
@@ -259,10 +260,10 @@ async def list_journal_vouchers(
 async def create_journal_voucher(
     voucher_data: JournalVoucherCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create journal voucher with entries"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Generate voucher number
     last_voucher = db.query(JournalVoucher).filter(
@@ -321,10 +322,10 @@ async def create_journal_voucher(
 async def post_journal_voucher(
     voucher_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Post journal voucher to ledger"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     voucher = db.query(JournalVoucher).filter(
         JournalVoucher.id == voucher_id,
@@ -355,10 +356,10 @@ async def list_ledger_entries(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List ledger entries"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(LedgerEntry).filter(
         LedgerEntry.tenant_id == tenant_id
@@ -397,10 +398,10 @@ async def list_ledger_entries(
 async def get_trial_balance(
     as_of_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Generate trial balance"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get all active accounts
     accounts = db.query(Account).filter(

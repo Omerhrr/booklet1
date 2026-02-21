@@ -11,6 +11,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.hr import Employee, PayrollConfig, Payslip, PayslipAddition, PayslipDeduction
 from ..utils.nigerian_tax import calculate_paye, calculate_pension
 
@@ -69,10 +70,10 @@ async def list_employees(
     department: Optional[str] = None,
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List employees"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Employee).filter(Employee.tenant_id == tenant_id)
 
@@ -106,10 +107,10 @@ async def list_employees(
 async def create_employee(
     employee_data: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create new employee"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate email
     if employee_data.email:
@@ -151,10 +152,10 @@ async def create_employee(
 async def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get employee details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     employee = db.query(Employee).filter(
         Employee.id == employee_id,
@@ -192,10 +193,10 @@ async def update_employee(
     employee_id: int,
     employee_data: EmployeeUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update employee"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     employee = db.query(Employee).filter(
         Employee.id == employee_id,
@@ -216,10 +217,10 @@ async def update_employee(
 async def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Deactivate employee (soft delete)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     employee = db.query(Employee).filter(
         Employee.id == employee_id,
@@ -241,10 +242,10 @@ async def delete_employee(
 @router.get("/payroll/config")
 async def get_payroll_config(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get payroll configuration"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     config = db.query(PayrollConfig).filter(
         PayrollConfig.tenant_id == tenant_id
@@ -275,10 +276,10 @@ async def get_payroll_config(
 async def run_payroll(
     payroll_data: PayrollRun,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Run payroll for specified month/year"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check if payroll already run for this period
     existing = db.query(Payslip).filter(
@@ -390,10 +391,10 @@ async def list_payslips(
     year: Optional[int] = None,
     employee_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List payslips"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Payslip).filter(Payslip.tenant_id == tenant_id)
 
@@ -430,10 +431,10 @@ async def list_payslips(
 async def get_payslip(
     payslip_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get payslip details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     payslip = db.query(Payslip).filter(
         Payslip.id == payslip_id,
@@ -495,10 +496,10 @@ async def get_payslip(
 async def mark_payslip_paid(
     payslip_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Mark payslip as paid"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     payslip = db.query(Payslip).filter(
         Payslip.id == payslip_id,
@@ -524,10 +525,10 @@ async def mark_payslip_paid(
 @router.get("/dashboard")
 async def get_hr_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get HR dashboard statistics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Total employees
     total_employees = db.query(Employee).filter(

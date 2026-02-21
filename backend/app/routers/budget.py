@@ -10,6 +10,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.budget import Budget, BudgetLine
 
 router = APIRouter(prefix="/budget", tags=["Budget"])
@@ -42,10 +43,10 @@ async def list_budgets(
     limit: int = Query(50, le=200),
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List budgets"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(Budget).filter(Budget.tenant_id == tenant_id)
 
@@ -72,10 +73,10 @@ async def list_budgets(
 async def create_budget(
     budget_data: BudgetCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create budget"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Calculate total
     total_budget = sum(line.amount for line in budget_data.lines)
@@ -112,10 +113,10 @@ async def create_budget(
 async def get_budget(
     budget_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get budget details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     budget = db.query(Budget).filter(
         Budget.id == budget_id,
@@ -150,10 +151,10 @@ async def get_budget(
 async def get_budget_variance(
     budget_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get budget variance analysis"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     budget = db.query(Budget).filter(
         Budget.id == budget_id,
@@ -220,10 +221,10 @@ async def update_budget(
     name: Optional[str] = None,
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update budget"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     budget = db.query(Budget).filter(
         Budget.id == budget_id,
@@ -246,10 +247,10 @@ async def update_budget(
 async def delete_budget(
     budget_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete budget"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     budget = db.query(Budget).filter(
         Budget.id == budget_id,

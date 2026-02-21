@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from ..database import get_db
 from ..security import get_current_user
 from ..models.permission import Role, Permission, RolePermission
+from ..models.user import User
 
 router = APIRouter(prefix="/roles", tags=["Roles"])
 
@@ -27,10 +28,10 @@ class RoleUpdate(BaseModel):
 @router.get("")
 async def list_roles(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List roles for tenant"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     roles = db.query(Role).filter(
         Role.tenant_id == tenant_id
@@ -51,10 +52,10 @@ async def list_roles(
 async def create_role(
     role_data: RoleCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create custom role"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate name
     existing = db.query(Role).filter(
@@ -90,14 +91,36 @@ async def create_role(
     return {"id": role.id, "message": "Role created successfully"}
 
 
+@router.get("/permissions/all")
+async def list_all_permissions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List all available permissions"""
+    permissions = db.query(Permission).order_by(Permission.category, Permission.name).all()
+
+    # Group by category
+    grouped = {}
+    for p in permissions:
+        if p.category not in grouped:
+            grouped[p.category] = []
+        grouped[p.category].append({
+            "id": p.id,
+            "name": p.name,
+            "description": p.description
+        })
+
+    return {"permissions_by_category": grouped}
+
+
 @router.get("/{role_id}")
 async def get_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get role details with permissions"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     role = db.query(Role).filter(
         Role.id == role_id,
@@ -133,10 +156,10 @@ async def update_role(
     role_id: int,
     role_data: RoleUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update role"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     role = db.query(Role).filter(
         Role.id == role_id,
@@ -176,10 +199,10 @@ async def update_role(
 async def delete_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete custom role"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     role = db.query(Role).filter(
         Role.id == role_id,
@@ -192,9 +215,9 @@ async def delete_role(
     if role.is_system:
         raise HTTPException(status_code=400, detail="Cannot delete system roles")
 
-    # Check if role has users
-    from ..models.user import User
-    users = db.query(User).filter(User.role_id == role_id).count()
+    # Check if role has users assigned via UserBranchRole
+    from ..models.branch import UserBranchRole
+    users = db.query(UserBranchRole).filter(UserBranchRole.role_id == role_id).count()
     if users > 0:
         raise HTTPException(status_code=400, detail=f"Cannot delete role: {users} users assigned")
 
@@ -207,25 +230,3 @@ async def delete_role(
     db.commit()
 
     return {"message": "Role deleted successfully"}
-
-
-@router.get("/permissions/all")
-async def list_all_permissions(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """List all available permissions"""
-    permissions = db.query(Permission).order_by(Permission.category, Permission.name).all()
-
-    # Group by category
-    grouped = {}
-    for p in permissions:
-        if p.category not in grouped:
-            grouped[p.category] = []
-        grouped[p.category].append({
-            "id": p.id,
-            "name": p.name,
-            "description": p.description
-        })
-
-    return {"permissions_by_category": grouped}

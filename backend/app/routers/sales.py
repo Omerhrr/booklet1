@@ -10,6 +10,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.sales import SalesInvoice, SalesInvoiceItem, CreditNote, CreditNoteItem, InvoicePaymentStatus
 from ..models.customer import Customer
 from ..models.product import Product
@@ -60,10 +61,10 @@ async def list_invoices(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List sales invoices"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(SalesInvoice).filter(SalesInvoice.tenant_id == tenant_id)
 
@@ -104,10 +105,10 @@ async def list_invoices(
 async def create_invoice(
     invoice_data: InvoiceCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create sales invoice"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Verify customer exists
     customer = db.query(Customer).filter(
@@ -199,10 +200,10 @@ async def create_invoice(
 async def get_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get invoice details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     invoice = db.query(SalesInvoice).filter(
         SalesInvoice.id == invoice_id,
@@ -260,10 +261,10 @@ async def get_invoice(
 async def post_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Post invoice to ledger"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     invoice = db.query(SalesInvoice).filter(
         SalesInvoice.id == invoice_id,
@@ -288,10 +289,10 @@ async def post_invoice(
 async def delete_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete invoice (only if not posted)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     invoice = db.query(SalesInvoice).filter(
         SalesInvoice.id == invoice_id,
@@ -334,10 +335,10 @@ async def list_credit_notes(
     limit: int = Query(50, le=200),
     customer_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List credit notes"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(CreditNote).filter(CreditNote.tenant_id == tenant_id)
 
@@ -366,10 +367,10 @@ async def list_credit_notes(
 async def create_credit_note(
     credit_note_data: CreditNoteCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create credit note"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Generate credit note number
     last_cn = db.query(CreditNote).filter(
@@ -428,10 +429,10 @@ async def create_credit_note(
 @router.get("/dashboard")
 async def get_sales_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get sales dashboard statistics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Total sales this month
     from datetime import datetime

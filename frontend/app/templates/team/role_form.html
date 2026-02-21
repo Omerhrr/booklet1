@@ -1,16 +1,40 @@
 {% extends "_shared/dashboard_base.html" %}
-{% block title %}Create Role{% endblock %}
+{% block title %}{% if role %}Edit Role{% else %}Create Role{% endif %}{% endblock %}
 {% block main_content %}
 <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Role</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% if role %}Edit Role{% else %}Create Role{% endif %}</h1>
     <form method="POST" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
         <div class="grid grid-cols-1 gap-6">
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label><input type="text" name="name" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label><textarea name="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></textarea></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label><input type="text" name="name" value="{{ role.name if role else '' }}" required class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label><textarea name="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm">{{ role.description if role else '' }}</textarea></div>
         </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permissions</label>
+            <div class="space-y-4 max-h-96 overflow-y-auto border rounded-lg p-4">
+                {% for category, perms in permissions.items() %}
+                <div class="border-b pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{{ category }}</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {% for perm in perms %}
+                        <label class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                            <input type="checkbox" name="permissions" value="{{ perm.id }}" 
+                                {% if role and perm.id in role.permissions|map(attribute='id')|list %}checked{% endif %}
+                                class="rounded border-gray-300 dark:border-gray-600">
+                            <span>{{ perm.name.split(':')[1]|title }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500">No permissions available. Please check your database configuration.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
         <div class="flex justify-end space-x-3">
             <a href="{{ url_for('team.roles') }}" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border rounded-lg">Cancel</a>
-            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Create</button>
+            <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">{% if role %}Update{% else %}Create{% endif %}</button>
         </div>
     </form>
 </div>

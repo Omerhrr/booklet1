@@ -7,9 +7,10 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 from ..database import get_db
-from ..security import get_current_user, get_password_hash
+from ..security import get_current_user, hash_password
 from ..models.user import User
 from ..models.permission import Role
+from ..models.branch import Branch, UserBranchRole
 
 router = APIRouter(prefix="/team", tags=["Team"])
 
@@ -39,10 +40,10 @@ async def list_team_members(
     limit: int = Query(50, le=200),
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List team members"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(User).filter(User.tenant_id == tenant_id)
 
@@ -75,10 +76,10 @@ async def list_team_members(
 async def create_team_member(
     member_data: TeamMemberCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create team member"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Check for duplicate username/email
     existing = db.query(User).filter(
@@ -97,19 +98,37 @@ async def create_team_member(
     if not role:
         raise HTTPException(status_code=400, detail="Invalid role")
 
+    # Verify branch belongs to tenant
+    branch = db.query(Branch).filter(
+        Branch.id == member_data.branch_id,
+        Branch.tenant_id == tenant_id
+    ).first()
+
+    if not branch:
+        raise HTTPException(status_code=400, detail="Invalid branch")
+
     user = User(
         tenant_id=tenant_id,
         username=member_data.username,
         email=member_data.email,
-        password_hash=get_password_hash(member_data.password),
+        hashed_password=hash_password(member_data.password),
         first_name=member_data.first_name,
         last_name=member_data.last_name,
         phone=member_data.phone,
-        role_id=member_data.role_id,
-        branch_id=member_data.branch_id
+        is_active=True
     )
 
     db.add(user)
+    db.flush()  # Get the user ID
+
+    # Assign role to user for the branch
+    user_branch_role = UserBranchRole(
+        user_id=user.id,
+        branch_id=member_data.branch_id,
+        role_id=member_data.role_id
+    )
+    db.add(user_branch_role)
+
     db.commit()
     db.refresh(user)
 
@@ -120,10 +139,10 @@ async def create_team_member(
 async def get_team_member(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get team member details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     user = db.query(User).filter(
         User.id == user_id,
@@ -154,10 +173,10 @@ async def update_team_member(
     user_id: int,
     member_data: TeamMemberUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Update team member"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     user = db.query(User).filter(
         User.id == user_id,
@@ -178,10 +197,10 @@ async def update_team_member(
 async def delete_team_member(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Deactivate team member"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     user = db.query(User).filter(
         User.id == user_id,
@@ -191,7 +210,7 @@ async def delete_team_member(
     if not user:
         raise HTTPException(status_code=404, detail="Team member not found")
 
-    if user.id == current_user["user_id"]:
+    if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
 
     user.is_active = False
@@ -205,10 +224,10 @@ async def reset_member_password(
     user_id: int,
     new_password: str,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Reset team member password"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     user = db.query(User).filter(
         User.id == user_id,
@@ -218,7 +237,7 @@ async def reset_member_password(
     if not user:
         raise HTTPException(status_code=404, detail="Team member not found")
 
-    user.password_hash = get_password_hash(new_password)
+    user.hashed_password = hash_password(new_password)
     db.commit()
 
     return {"message": "Password reset successfully"}

@@ -89,7 +89,6 @@ def edit(user_id):
             'last_name': request.form.get('last_name', '').strip(),
             'email': request.form.get('email', '').strip(),
             'phone': request.form.get('phone', '').strip() or None,
-            'role_id': int(request.form.get('role_id', 1)),
             'is_active': request.form.get('is_active') == 'on'
         }
         try:
@@ -104,7 +103,7 @@ def edit(user_id):
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
     
-    member, roles = None, []
+    member, roles, branches = None, [], []
     try:
         r = requests.get(f'{API_BASE}/team/{user_id}', headers=get_headers(), timeout=5)
         if r.status_code == 200: member = r.json()
@@ -113,8 +112,12 @@ def edit(user_id):
         r = requests.get(f'{API_BASE}/roles', headers=get_headers(), timeout=5)
         if r.status_code == 200: roles = get_items(r.json())
     except: pass
+    try:
+        r = requests.get(f'{API_BASE}/branches', headers=get_headers(), timeout=5)
+        if r.status_code == 200: branches = get_items(r.json())
+    except: pass
     
-    return render_template('team/form.html', member=member, roles=roles)
+    return render_template('team/form.html', member=member, roles=roles, branches=branches)
 
 @team_bp.route('/<int:user_id>/delete', methods=['POST'])
 def delete(user_id):
@@ -159,4 +162,66 @@ def create_role():
             flash('Cannot connect to server', 'error')
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
-    return render_template('team/role_form.html', role=None, permissions={})
+    
+    # Get all permissions for the form
+    permissions = {}
+    try:
+        r = requests.get(f'{API_BASE}/roles/permissions/all', headers=get_headers(), timeout=5)
+        if r.status_code == 200:
+            permissions = r.json().get('permissions_by_category', {})
+    except: pass
+    
+    return render_template('team/role_form.html', role=None, permissions=permissions)
+
+@team_bp.route('/roles/<int:role_id>/edit', methods=['GET', 'POST'])
+def edit_role(role_id):
+    if request.method == 'POST':
+        permissions = request.form.getlist('permissions')
+        data = {
+            'name': request.form.get('name', '').strip(),
+            'description': request.form.get('description', '').strip(),
+            'permissions': [int(p) for p in permissions if p]
+        }
+        try:
+            response = requests.put(f'{API_BASE}/roles/{role_id}', json=data, headers=get_headers(), timeout=10)
+            if response.status_code == 200:
+                flash('Role updated successfully', 'success')
+                return redirect(url_for('team.roles'))
+            else:
+                flash(handle_error(response), 'error')
+        except requests.exceptions.ConnectionError:
+            flash('Cannot connect to server', 'error')
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+    
+    # Get role details
+    role = None
+    try:
+        r = requests.get(f'{API_BASE}/roles/{role_id}', headers=get_headers(), timeout=5)
+        if r.status_code == 200:
+            role = r.json()
+    except: pass
+    
+    # Get all permissions for the form
+    permissions = {}
+    try:
+        r = requests.get(f'{API_BASE}/roles/permissions/all', headers=get_headers(), timeout=5)
+        if r.status_code == 200:
+            permissions = r.json().get('permissions_by_category', {})
+    except: pass
+    
+    return render_template('team/role_form.html', role=role, permissions=permissions)
+
+@team_bp.route('/roles/<int:role_id>/delete', methods=['POST'])
+def delete_role(role_id):
+    try:
+        response = requests.delete(f'{API_BASE}/roles/{role_id}', headers=get_headers(), timeout=10)
+        if response.status_code == 200:
+            flash('Role deleted successfully', 'success')
+        else:
+            flash(handle_error(response), 'error')
+    except requests.exceptions.ConnectionError:
+        flash('Cannot connect to server', 'error')
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    return redirect(url_for('team.roles'))

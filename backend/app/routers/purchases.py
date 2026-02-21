@@ -10,6 +10,7 @@ from enum import Enum
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.purchase import PurchaseBill, PurchaseBillItem, DebitNote, DebitNoteItem
 from ..models.vendor import Vendor
 from ..models.product import Product
@@ -55,10 +56,10 @@ async def list_bills(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List purchase bills"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(PurchaseBill).filter(PurchaseBill.tenant_id == tenant_id)
 
@@ -98,10 +99,10 @@ async def list_bills(
 async def create_bill(
     bill_data: PurchaseBillCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create purchase bill"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Verify vendor exists
     vendor = db.query(Vendor).filter(
@@ -190,10 +191,10 @@ async def create_bill(
 async def get_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get purchase bill details"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     bill = db.query(PurchaseBill).filter(
         PurchaseBill.id == bill_id,
@@ -246,10 +247,10 @@ async def get_bill(
 async def post_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Post purchase bill to ledger"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     bill = db.query(PurchaseBill).filter(
         PurchaseBill.id == bill_id,
@@ -274,10 +275,10 @@ async def post_bill(
 async def delete_bill(
     bill_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete purchase bill (only if not posted)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     bill = db.query(PurchaseBill).filter(
         PurchaseBill.id == bill_id,
@@ -320,10 +321,10 @@ async def list_debit_notes(
     limit: int = Query(50, le=200),
     vendor_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List debit notes"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     query = db.query(DebitNote).filter(DebitNote.tenant_id == tenant_id)
 
@@ -352,10 +353,10 @@ async def list_debit_notes(
 async def create_debit_note(
     debit_note_data: DebitNoteCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create debit note"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     last_dn = db.query(DebitNote).filter(
         DebitNote.tenant_id == tenant_id
@@ -412,10 +413,10 @@ async def create_debit_note(
 @router.get("/dashboard")
 async def get_purchases_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get purchases dashboard statistics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     from datetime import datetime
     first_day = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)

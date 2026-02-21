@@ -8,6 +8,7 @@ from typing import Optional
 
 from ..database import get_db
 from ..security import get_current_user
+from ..models.user import User
 from ..models.sales import SalesInvoice, InvoicePaymentStatus
 from ..models.purchase import PurchaseBill
 from ..models.customer import Customer
@@ -24,10 +25,10 @@ async def get_dashboard_analytics(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get main dashboard analytics"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     if not start_date:
         start_date = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -122,10 +123,10 @@ async def get_dashboard_analytics(
 async def get_sales_trend(
     months: int = Query(6, ge=1, le=12),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get monthly sales trend"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     end_date = datetime.now()
     start_date = end_date - timedelta(days=months * 30)
@@ -166,10 +167,10 @@ async def get_expenses_by_category(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get expenses breakdown by category"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     if not start_date:
         start_date = datetime.now().replace(day=1)
@@ -201,10 +202,10 @@ async def get_expenses_by_category(
 async def get_top_customers(
     limit: int = Query(10, ge=5, le=50),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get top customers by revenue"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     invoices = db.query(SalesInvoice).filter(
         SalesInvoice.tenant_id == tenant_id
@@ -236,10 +237,10 @@ async def get_top_customers(
 @router.get("/inventory-alerts")
 async def get_inventory_alerts(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get inventory alerts (low stock, out of stock)"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     products = db.query(Product).filter(
         Product.tenant_id == tenant_id,
@@ -277,10 +278,10 @@ async def get_inventory_alerts(
 @router.get("/cash-position")
 async def get_cash_position(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get current cash position"""
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.tenant_id
 
     # Get cash/bank accounts
     from ..models.banking import BankAccount
