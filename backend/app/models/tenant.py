@@ -61,6 +61,23 @@ class Tenant(Base):
     id = Column(Integer, primary_key=True, index=True)
     subdomain = Column(String(50), unique=True, index=True, nullable=False)
     business_name = Column(String(255), nullable=False)
+    
+    # Business contact info
+    trading_name = Column(String(255), nullable=True)
+    industry = Column(String(100), nullable=True)
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    country = Column(String(100), default="Nigeria")
+    phone = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=True)
+    website = Column(String(255), nullable=True)
+    
+    # Nigerian business identifiers
+    tax_id = Column(String(50), nullable=True)  # TIN
+    rc_number = Column(String(50), nullable=True)  # CAC registration number
+    
+    # Branding
     logo_url = Column(String(500), nullable=True)
     primary_color = Column(String(7), default="#3B82F6")
     custom_domain = Column(String(100), unique=True, nullable=True)
@@ -88,6 +105,18 @@ class Tenant(Base):
     is_vat_registered = Column(Boolean, default=False)
     vat_rate = Column(Float, default=7.5)  # Nigerian VAT rate
     fiscal_year_start = Column(Integer, default=1)  # January
+    
+    # Invoice settings
+    invoice_prefix = Column(String(10), default="INV-")
+    quote_prefix = Column(String(10), default="QT-")
+    credit_note_prefix = Column(String(10), default="CN-")
+    default_payment_terms = Column(Integer, default=30)
+    invoice_notes = Column(Text, nullable=True)
+    invoice_terms = Column(Text, nullable=True)
+    
+    # Localization
+    timezone = Column(String(50), default="Africa/Lagos")
+    date_format = Column(String(20), default="DD/MM/YYYY")
     
     # Automation settings
     depreciation_day = Column(Integer, default=1)

@@ -37,26 +37,41 @@ def login():
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
                 
-                # Get user info
-                user_response = requests.get(
-                    f"{API_BASE_URL}/auth/me",
+                # Get full session info
+                session_response = requests.get(
+                    f"{API_BASE_URL}/auth/session",
                     headers={'Authorization': f"Bearer {data['access_token']}"}
                 )
                 
-                if user_response.status_code == 200:
-                    user_data = user_response.json()
-                    session['user'] = user_data
-                    session['tenant'] = {
-                        'business_name': user_data.get('tenant_name', 'Business'),
-                        'id': user_data.get('tenant_id')
-                    }
-                    session['tenant_id'] = user_data.get('tenant_id')
-                    session['is_superuser'] = user_data.get('is_superuser', False)
-                    # Initialize permissions (superusers will have access to everything)
-                    session['permissions'] = [] if not user_data.get('is_superuser') else ['all']
-
+                if session_response.status_code == 200:
+                    session_data = session_response.json()
+                    session['user'] = session_data.get('user', {})
+                    session['tenant'] = session_data.get('tenant', {})
+                    session['selected_branch'] = session_data.get('selected_branch')
+                    session['accessible_branches'] = session_data.get('accessible_branches', [])
+                    session['permissions'] = session_data.get('permissions', [])
+                    session['is_superuser'] = session_data.get('user', {}).get('is_superuser', False)
+                    
                     flash('Welcome back!', 'success')
                     return redirect(url_for('dashboard.index'))
+                else:
+                    # Fallback to basic user info
+                    user_response = requests.get(
+                        f"{API_BASE_URL}/auth/me",
+                        headers={'Authorization': f"Bearer {data['access_token']}"}
+                    )
+                    if user_response.status_code == 200:
+                        user_data = user_response.json()
+                        session['user'] = user_data
+                        session['tenant'] = {
+                            'business_name': user_data.get('tenant_name', 'Business'),
+                            'id': user_data.get('tenant_id')
+                        }
+                        session['tenant_id'] = user_data.get('tenant_id')
+                        session['is_superuser'] = user_data.get('is_superuser', False)
+                        session['permissions'] = []
+                        flash('Welcome back!', 'success')
+                        return redirect(url_for('dashboard.index'))
             else:
                 error = response.json().get('detail', 'Login failed')
                 flash(error, 'error')
@@ -84,6 +99,10 @@ def signup():
             flash('Passwords do not match', 'error')
             return render_template('auth/signup.html')
         
+        if not business_name or not email or not username or not password or not subdomain:
+            flash('Please fill in all required fields', 'error')
+            return render_template('auth/signup.html')
+        
         # Call API
         try:
             response = requests.post(
@@ -106,28 +125,42 @@ def signup():
                 session['access_token'] = data['access_token']
                 session['refresh_token'] = data['refresh_token']
 
-                # Get user info
-                user_response = requests.get(
-                    f"{API_BASE_URL}/auth/me",
+                # Get full session info
+                session_response = requests.get(
+                    f"{API_BASE_URL}/auth/session",
                     headers={'Authorization': f"Bearer {data['access_token']}"}
                 )
 
-                if user_response.status_code == 200:
-                    user_data = user_response.json()
-                    session['user'] = user_data
-                    session['tenant'] = {
-                        'business_name': user_data.get('tenant_name', 'Business'),
-                        'id': user_data.get('tenant_id')
-                    }
-                    session['tenant_id'] = user_data.get('tenant_id')
-                    session['is_superuser'] = user_data.get('is_superuser', False)
-                    # Initialize permissions (superusers will have access to everything)
-                    session['permissions'] = [] if not user_data.get('is_superuser') else ['all']
+                if session_response.status_code == 200:
+                    session_data = session_response.json()
+                    session['user'] = session_data.get('user', {})
+                    session['tenant'] = session_data.get('tenant', {})
+                    session['selected_branch'] = session_data.get('selected_branch')
+                    session['accessible_branches'] = session_data.get('accessible_branches', [])
+                    session['permissions'] = session_data.get('permissions', [])
+                    session['is_superuser'] = session_data.get('user', {}).get('is_superuser', False)
+                else:
+                    # Fallback
+                    user_response = requests.get(
+                        f"{API_BASE_URL}/auth/me",
+                        headers={'Authorization': f"Bearer {data['access_token']}"}
+                    )
+                    if user_response.status_code == 200:
+                        user_data = user_response.json()
+                        session['user'] = user_data
+                        session['tenant'] = {
+                            'business_name': user_data.get('tenant_name', 'Business'),
+                            'id': user_data.get('tenant_id')
+                        }
+                        session['tenant_id'] = user_data.get('tenant_id')
+                        session['is_superuser'] = user_data.get('is_superuser', False)
+                        session['permissions'] = []
 
                 flash('Account created successfully! Welcome to Booklet.', 'success')
                 return redirect(url_for('dashboard.index'))
             else:
-                error = response.json().get('detail', 'Signup failed')
+                error_data = response.json()
+                error = error_data.get('detail', 'Signup failed')
                 flash(error, 'error')
         except Exception as e:
             flash(f'Connection error: {str(e)}', 'error')

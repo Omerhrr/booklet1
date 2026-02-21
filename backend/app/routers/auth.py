@@ -455,6 +455,44 @@ async def get_me(
     )
 
 
+@router.get("/session")
+async def get_session(
+    session: dict = Depends(get_current_active_user)
+):
+    """Get full session info including tenant and branches"""
+    user = session["user"]
+    tenant = session["tenant"]
+    
+    return {
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "is_superuser": user.is_superuser,
+            "is_active": user.is_active
+        },
+        "tenant": {
+            "id": tenant.id,
+            "business_name": tenant.business_name,
+            "subdomain": tenant.subdomain,
+            "email": tenant.email,
+            "phone": tenant.phone,
+            "address": tenant.address,
+            "city": tenant.city,
+            "state": tenant.state,
+            "country": tenant.country,
+            "base_currency": tenant.base_currency,
+            "subscription_status": tenant.subscription_status.value if tenant.subscription_status else None,
+            "is_active": tenant.is_active
+        },
+        "selected_branch": session["selected_branch"],
+        "accessible_branches": session["accessible_branches"],
+        "permissions": session["permissions"]
+    }
+
+
 # ============================================
 # HELPERS
 # ============================================
